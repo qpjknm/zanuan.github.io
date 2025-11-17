@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>火影忍者格斗游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3em;
+            margin-bottom: 30px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* 界面切换 */
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 主菜单 */
+        .menu {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            margin: 15px;
+            font-size: 1.2em;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* 角色选择 */
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .character-card {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .character-card:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: #ffd93d;
+            transform: scale(1.05);
+        }
+
+        .character-card.selected {
+            border-color: #ff6b6b;
+            background: rgba(255,107,107,0.2);
+        }
+
+        .character-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .character-info {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        /* 战斗界面 */
+        .battle-arena {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+        }
+
+        .ninja-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            padding: 25px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .ninja-card.defending {
+            box-shadow: 0 0 20px rgba(93, 173, 226, 0.8);
+        }
+
+        .ninja-card.attacking {
+            animation: attackAnim 0.5s;
+        }
+
+        .ninja-card.healing {
+            animation: healAnim 0.8s;
+        }
+
+        @keyframes attackAnim {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes healAnim {
+            0% { box-shadow: 0 0 0px rgba(46, 213, 115, 0.8); }
+            50% { box-shadow: 0 0 30px rgba(46, 213, 115, 0.8); }
+            100% { box-shadow: 0 0 0px rgba(46, 213, 115, 0); }
+        }
+
+        .ninja-name {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .health-bar, .chakra-bar {
+            margin: 15px 0;
+        }
+
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .bar-bg {
+            height: 25px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .health-fill {
+            background: linear-gradient(90deg, #ff6b6b, #c44569);
+            width: 100%;
+        }
+
+        .chakra-fill {
+            background: linear-gradient(90deg, #4834d4, #686de0);
+            width: 100%;
+        }
+
+        /* 战斗日志 */
+        .battle-log {
+            background: rgba(0,0,0,0.4);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin: 8px 0;
+            padding: 5px;
+            border-left: 3px solid #ffd93d;
+            padding-left: 10px;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* 行动按钮 */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .action-btn {
+            padding: 12px 20px;
+            font-size: 1em;
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .action-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+
+        /* 忍术选择 */
+        .jutsu-list {
+            background: rgba(0,0,0,0.4);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .jutsu-item {
+            background: rgba(255,255,255,0.1);
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .jutsu-item:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(5px);
+        }
+
+        .jutsu-name {
+            font-weight: bold;
+            color: #ffd93d;
+        }
+
+        .jutsu-info {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        /* 游戏结束 */
+        .game-over {
+            text-align: center;
+            padding: 50px;
+        }
+
+        .winner-text {
+            font-size: 3em;
+            margin: 20px 0;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .battle-arena {
+                grid-template-columns: 1fr;
+            }
+            h1 { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 主菜单 -->
+        <div id="mainMenu" class="screen active">
+            <h1>🔥 火影忍者格斗游戏 🔥</h1>
+            <div class="menu">
+                <button class="btn" onclick="showCharacterSelect()">开始游戏</button>
+                <button class="btn" onclick="showRules()">游戏规则</button>
+                <button class="btn" onclick="showCharacters()">角色介绍</button>
+            </div>
+        </div>
+
+        <!-- 规则说明 -->
+        <div id="rulesScreen" class="screen">
+            <h1>游戏规则</h1>
+            <div style="background: rgba(0,0,0,0.4); padding: 30px; border-radius: 20px; max-width: 800px; margin: 0 auto;">
+                <h2 style="margin-bottom: 20px; color: #ffd93d;">游戏玩法：</h2>
+                <ul style="list-style: none; font-size: 1.2em; line-height: 2;">
+                    <li>⚔️ <strong>普通攻击：</strong>消耗0查克拉，造成10-25点伤害</li>
+                    <li>🔥 <strong>使用忍术：</strong>消耗查克拉，造成高伤害或治疗</li>
+                    <li>🛡️ <strong>防御：</strong>减少下次受到的伤害</li>
+                    <li>💙 <strong>查克拉：</strong>每回合自动恢复15点</li>
+                    <li>❤️ <strong>生命值：</strong>降到0即战败</li>
+                </ul>
+                <button class="btn" onclick="showMainMenu()" style="margin-top: 30px;">返回主菜单</button>
+            </div>
+        </div>
+
+        <!-- 角色介绍 -->
+        <div id="charactersScreen" class="screen">
+            <h1>角色介绍</h1>
+            <div id="characterList" style="max-width: 1000px; margin: 0 auto;"></div>
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn" onclick="showMainMenu()">返回主菜单</button>
+            </div>
+        </div>
+
+        <!-- 角色选择 -->
+        <div id="charSelectScreen" class="screen">
+            <h1>选择你的忍者</h1>
+            <div id="playerSelection" class="character-grid"></div>
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn" id="confirmBtn" onclick="confirmSelection()" disabled>确认选择</button>
+                <button class="btn" onclick="showMainMenu()">返回主菜单</button>
+            <
