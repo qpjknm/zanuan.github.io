@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>火影忍者格斗游戏</title>
     <style>
+        /* 样式保持不变 */
         * {
             margin: 0;
             padding: 0;
@@ -363,4 +364,597 @@
             <div style="text-align: center; margin-top: 30px;">
                 <button class="btn" id="confirmBtn" onclick="confirmSelection()" disabled>确认选择</button>
                 <button class="btn" onclick="showMainMenu()">返回主菜单</button>
-            <
+            </div>
+        </div>
+
+        <!-- 战斗界面 -->
+        <div id="battleScreen" class="screen">
+            <h1>忍者对决</h1>
+            <div class="battle-arena">
+                <div id="playerCard" class="ninja-card">
+                    <div class="ninja-name" id="playerName"></div>
+                    <div class="health-bar">
+                        <div class="bar-label">
+                            <span>生命值</span>
+                            <span id="playerHealthText"></span>
+                        </div>
+                        <div class="bar-bg">
+                            <div class="bar-fill health-fill" id="playerHealthBar"></div>
+                        </div>
+                    </div>
+                    <div class="chakra-bar">
+                        <div class="bar-label">
+                            <span>查克拉</span>
+                            <span id="playerChakraText"></span>
+                        </div>
+                        <div class="bar-bg">
+                            <div class="bar-fill chakra-fill" id="playerChakraBar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="enemyCard" class="ninja-card">
+                    <div class="ninja-name" id="enemyName"></div>
+                    <div class="health-bar">
+                        <div class="bar-label">
+                            <span>生命值</span>
+                            <span id="enemyHealthText"></span>
+                        </div>
+                        <div class="bar-bg">
+                            <div class="bar-fill health-fill" id="enemyHealthBar"></div>
+                        </div>
+                    </div>
+                    <div class="chakra-bar">
+                        <div class="bar-label">
+                            <span>查克拉</span>
+                            <span id="enemyChakraText"></span>
+                        </div>
+                        <div class="bar-bg">
+                            <div class="bar-fill chakra-fill" id="enemyChakraBar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 战斗日志 -->
+            <div class="battle-log" id="battleLog">
+                <div class="log-entry">战斗开始！选择你的行动...</div>
+            </div>
+
+            <!-- 行动按钮 -->
+            <div class="action-buttons" id="actionButtons">
+                <button class="action-btn" onclick="playerAction('attack')">⚔️ 普通攻击</button>
+                <button class="action-btn" onclick="showJutsuMenu()">🔥 使用忍术</button>
+                <button class="action-btn" onclick="playerAction('defend')">🛡️ 防御</button>
+            </div>
+
+            <!-- 忍术选择菜单 -->
+            <div class="jutsu-list" id="jutsuMenu" style="display: none;"></div>
+        </div>
+
+        <!-- 游戏结束 -->
+        <div id="gameOverScreen" class="screen game-over">
+            <h1>战斗结束！</h1>
+            <div class="winner-text" id="winnerText"></div>
+            <button class="btn" onclick="resetGame()">再来一局</button>
+            <button class="btn" onclick="showMainMenu()">返回主菜单</button>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        let gameState = {
+            player: null,
+            enemy: null,
+            isPlayerTurn: true,
+            selectedJutsu: null,
+            turnInProgress: false
+        };
+
+        // 忍术类
+        class Jutsu {
+            constructor(name, damage, chakraCost, description) {
+                this.name = name;
+                this.damage = damage;
+                this.chakraCost = chakraCost;
+                this.description = description;
+            }
+        }
+
+        // 忍者类
+        class Ninja {
+            constructor(name, clan, health, chakra) {
+                this.name = name;
+                this.clan = clan;
+                this.maxHealth = health;
+                this.health = health;
+                this.maxChakra = chakra;
+                this.chakra = chakra;
+                this.jutsus = [];
+                this.isDefending = false;
+            }
+
+            addJutsu(jutsu) {
+                this.jutsus.push(jutsu);
+            }
+
+            attack(target) {
+                this.isDefending = false;
+                let damage = Math.floor(Math.random() * 16) + 10;
+                
+                if (target.isDefending) {
+                    damage = Math.floor(damage / 2);
+                    this.log(`💡 ${target.name} 防御了部分伤害！`);
+                }
+                
+                target.takeDamage(damage);
+                this.log(`⚔️ ${this.name} 的普通攻击造成 ${damage} 点伤害！`);
+                
+                document.getElementById('playerCard').classList.add('attacking');
+                setTimeout(() => {
+                    document.getElementById('playerCard').classList.remove('attacking');
+                }, 500);
+            }
+
+            useJutsu(jutsuIndex, target) {
+                this.isDefending = false;
+                
+                if (jutsuIndex < 0 || jutsuIndex >= this.jutsus.length) {
+                    this.log("忍术选择错误！");
+                    return false;
+                }
+
+                const jutsu = this.jutsus[jutsuIndex];
+                
+                if (this.chakra < jutsu.chakraCost) {
+                    this.log(`查克拉不足！需要 ${jutsu.chakraCost} 点，当前只有 ${this.chakra} 点`);
+                    return false;
+                }
+
+                this.chakra -= jutsu.chakraCost;
+                
+                if (jutsu.damage < 0) {
+                    const healAmount = Math.abs(jutsu.damage);
+                    this.health = Math.min(this.maxHealth, this.health + healAmount);
+                    this.log(`🌸 ${this.name} 使用 ${jutsu.name}！${jutsu.description}`);
+                    this.log(`恢复了 ${healAmount} 点生命值！`);
+                    
+                    document.getElementById('playerCard').classList.add('healing');
+                    setTimeout(() => {
+                        document.getElementById('playerCard').classList.remove('healing');
+                    }, 800);
+                } else {
+                    let damage = jutsu.damage;
+                    
+                    if (target.isDefending) {
+                        damage = Math.floor(damage * 0.6);
+                        this.log(`💡 ${target.name} 防御了部分伤害！`);
+                    }
+                    
+                    target.takeDamage(damage);
+                    this.log(`🔥 ${this.name} 使用 ${jutsu.name}！${jutsu.description}`);
+                    this.log(`造成 ${damage} 点伤害！消耗 ${jutsu.chakraCost} 点查克拉`);
+                    
+                    document.getElementById('playerCard').classList.add('attacking');
+                    setTimeout(() => {
+                        document.getElementById('playerCard').classList.remove('attacking');
+                    }, 500);
+                }
+                
+                return true;
+            }
+
+            defend() {
+                this.isDefending = true;
+                this.log(`🛡️ ${this.name} 进入防御姿态！`);
+                document.getElementById('playerCard').classList.add('defending');
+            }
+
+            takeDamage(damage) {
+                this.health -= damage;
+                if (this.health < 0) this.health = 0;
+            }
+
+            restoreChakra() {
+                const restore = 15;
+                this.chakra = Math.min(this.maxChakra, this.chakra + restore);
+                this.log(`✨ ${this.name} 恢复了 ${restore} 点查克拉`);
+            }
+
+            isAlive() {
+                return this.health > 0;
+            }
+
+            log(message) {
+                const logDiv = document.getElementById('battleLog');
+                if (!logDiv) return; // 健壮性检查
+                
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.textContent = message;
+                logDiv.appendChild(entry);
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+        }
+
+        // 角色创建函数
+        function createNaruto() {
+            const naruto = new Ninja("漩涡鸣人", "木叶村", 120, 100);
+            naruto.addJutsu(new Jutsu("影分身术", 25, 20, "制造分身围攻敌人"));
+            naruto.addJutsu(new Jutsu("螺旋丸", 45, 35, "查克拉旋转的冲击波"));
+            naruto.addJutsu(new Jutsu("仙人模式·螺旋丸", 65, 50, "仙术查克拉的终极一击"));
+            return naruto;
+        }
+
+        function createSasuke() {
+            const sasuke = new Ninja("宇智波佐助", "宇智波一族", 110, 110);
+            sasuke.addJutsu(new Jutsu("火遁·豪火球", 30, 25, "巨大的火焰吞噬敌人"));
+            sasuke.addJutsu(new Jutsu("千鸟", 50, 40, "雷属性突刺攻击"));
+            sasuke.addJutsu(new Jutsu("须佐能乎", 70, 60, "写轮眼的究极防御与攻击"));
+            return sasuke;
+        }
+
+        function createKakashi() {
+            const kakashi = new Ninja("旗木卡卡西", "木叶村", 100, 120);
+            kakashi.addJutsu(new Jutsu("雷切", 45, 35, "雷属性查克拉刀"));
+            kakashi.addJutsu(new Jutsu("土遁·土流壁", 20, 20, "土墙防御并反击"));
+            kakashi.addJutsu(new Jutsu("神威", 75, 65, "万花筒写轮眼的空间扭曲"));
+            return kakashi;
+        }
+
+        function createSakura() {
+            const sakura = new Ninja("春野樱", "木叶村", 90, 80);
+            sakura.addJutsu(new Jutsu("怪力", 40, 25, "精确查克拉控制的怪力打击"));
+            sakura.addJutsu(new Jutsu("医疗忍术", -35, 20, "恢复自己35点生命值"));
+            sakura.addJutsu(new Jutsu("樱花冲", 35, 30, "强力的体术连续攻击"));
+            return sakura;
+        }
+
+        function createItachi() {
+            const itachi = new Ninja("宇智波鼬", "宇智波一族", 105, 115);
+            itachi.addJutsu(new Jutsu("幻术·月读", 40, 30, "写轮眼制造的幻术空间"));
+            itachi.addJutsu(new Jutsu("天照", 55, 45, "无法熄灭的黑色火焰"));
+            itachi.addJutsu(new Jutsu("须佐能乎·十拳剑", 80, 70, "封印一切的究极神器"));
+            return itachi;
+        }
+
+        const characters = {
+            "1": createNaruto,
+            "2": createSasuke,
+            "3": createKakashi,
+            "4": createSakura,
+            "5": createItachi
+        };
+
+        const characterNames = {
+            "1": "漩涡鸣人 (高血量)",
+            "2": "宇智波佐助 (高查克拉)",
+            "3": "旗木卡卡西 (均衡)",
+            "4": "春野樱 (治疗能力)",
+            "5": "宇智波鼬 (幻术大师)"
+        };
+
+        // 界面控制函数
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showMainMenu() {
+            showScreen('mainMenu');
+        }
+
+        function showRules() {
+            showScreen('rulesScreen');
+        }
+
+        function showCharacters() {
+            showScreen('charactersScreen');
+            const listDiv = document.getElementById('characterList');
+            listDiv.innerHTML = '';
+            
+            for (let i = 1; i <= 5; i++) {
+                const char = characters[i.toString()]();
+                const charDiv = document.createElement('div');
+                charDiv.innerHTML = `
+                    <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; margin: 15px 0;">
+                        <h3 style="color: #ffd93d; margin-bottom: 15px;">${char.name}</h3>
+                        <p style="margin-bottom: 10px;"><strong>生命值:</strong> ${char.maxHealth} | <strong>查克拉:</strong> ${char.maxChakra}</p>
+                        <p style="margin-bottom: 15px;"><strong>忍术:</strong></p>
+                        <ul style="list-style: none; padding-left: 20px;">
+                            ${char.jutsus.map(j => `<li style="margin: 5px 0;">🔥 ${j.name} (伤害:${j.damage} 查克拉:${j.chakraCost})</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+                listDiv.appendChild(charDiv);
+            }
+        }
+
+        function showCharacterSelect() {
+            showScreen('charSelectScreen');
+            const selectionDiv = document.getElementById('playerSelection');
+            selectionDiv.innerHTML = '';
+            
+            for (let key in characterNames) {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                card.dataset.character = key;
+                card.innerHTML = `
+                    <div class="character-name">${characters[key]().name}</div>
+                    <div class="character-info">${characterNames[key]}</div>
+                `;
+                card.onclick = () => selectCharacter(key, card);
+                selectionDiv.appendChild(card);
+            }
+        }
+
+        let selectedCharacter = null;
+
+        function selectCharacter(charKey, cardElement) {
+            document.querySelectorAll('.character-card').forEach(c => c.classList.remove('selected'));
+            cardElement.classList.add('selected');
+            selectedCharacter = charKey;
+            document.getElementById('confirmBtn').disabled = false;
+        }
+
+        function confirmSelection() {
+            if (!selectedCharacter) return;
+            
+            gameState.player = characters[selectedCharacter]();
+            
+            // 随机选择敌人
+            const enemyKeys = Object.keys(characters).filter(k => k !== selectedCharacter);
+            const enemyKey = enemyKeys[Math.floor(Math.random() * enemyKeys.length)];
+            gameState.enemy = characters[enemyKey]();
+            
+            startBattle();
+        }
+
+        function startBattle() {
+            showScreen('battleScreen');
+            
+            // 初始化显示
+            document.getElementById('playerName').textContent = gameState.player.name;
+            document.getElementById('enemyName').textContent = gameState.enemy.name;
+            
+            updateUI();
+            
+            // 清空战斗日志
+            document.getElementById('battleLog').innerHTML = '<div class="log-entry">战斗开始！选择你的行动...</div>';
+            
+            // 绑定日志方法
+            gameState.player.log = function(message) {
+                const logDiv = document.getElementById('battleLog');
+                if (!logDiv) return;
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.textContent = message;
+                logDiv.appendChild(entry);
+                logDiv.scrollTop = logDiv.scrollHeight;
+            };
+            
+            gameState.enemy.log = function(message) {
+                const logDiv = document.getElementById('battleLog');
+                if (!logDiv) return;
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.style.color = '#ff9999';
+                entry.textContent = message;
+                logDiv.appendChild(entry);
+                logDiv.scrollTop = logDiv.scrollHeight;
+            };
+        }
+
+        function updateUI() {
+            // 健壮性检查
+            if (!gameState.player || !gameState.enemy) return;
+            
+            const player = gameState.player;
+            const enemy = gameState.enemy;
+            
+            // 更新玩家状态
+            document.getElementById('playerHealthText').textContent = `${player.health}/${player.maxHealth}`;
+            document.getElementById('playerHealthBar').style.width = `${(player.health / player.maxHealth) * 100}%`;
+            document.getElementById('playerChakraText').textContent = `${player.chakra}/${player.maxChakra}`;
+            document.getElementById('playerChakraBar').style.width = `${(player.chakra / player.maxChakra) * 100}%`;
+            
+            // 更新敌人状态
+            document.getElementById('enemyHealthText').textContent = `${enemy.health}/${enemy.maxHealth}`;
+            document.getElementById('enemyHealthBar').style.width = `${(enemy.health / enemy.maxHealth) * 100}%`;
+            document.getElementById('enemyChakraText').textContent = `${enemy.chakra}/${enemy.maxChakra}`;
+            document.getElementById('enemyChakraBar').style.width = `${(enemy.chakra / enemy.maxChakra) * 100}%`;
+            
+            // 防御状态
+            const playerCard = document.getElementById('playerCard');
+            const enemyCard = document.getElementById('enemyCard');
+            
+            if (playerCard) {
+                if (player.isDefending) {
+                    playerCard.classList.add('defending');
+                } else {
+                    playerCard.classList.remove('defending');
+                }
+            }
+            
+            if (enemyCard) {
+                if (enemy.isDefending) {
+                    enemyCard.classList.add('defending');
+                } else {
+                    enemyCard.classList.remove('defending');
+                }
+            }
+            
+            // 按钮状态 - 修复点：确保状态正确反映
+            const buttons = document.querySelectorAll('.action-btn');
+            buttons.forEach(btn => {
+                btn.disabled = !gameState.isPlayerTurn || gameState.turnInProgress;
+            });
+        }
+
+        function playerAction(action) {
+            if (!gameState.isPlayerTurn || gameState.turnInProgress) return;
+            
+            gameState.turnInProgress = true;
+            
+            const player = gameState.player;
+            const enemy = gameState.enemy;
+            
+            // 重置防御状态
+            player.isDefending = false;
+            
+            switch(action) {
+                case 'attack':
+                    player.attack(enemy);
+                    break;
+                case 'defend':
+                    player.defend();
+                    break;
+            }
+            
+            updateUI();
+            
+            if (!enemy.isAlive()) {
+                endBattle(true);
+                return;
+            }
+            
+            // 切换到敌人回合
+            gameState.isPlayerTurn = false;
+            
+            setTimeout(() => {
+                enemyTurn();
+            }, 1500);
+        }
+
+        function showJutsuMenu() {
+            if (!gameState.isPlayerTurn || gameState.turnInProgress) return;
+            
+            const player = gameState.player;
+            const jutsuMenu = document.getElementById('jutsuMenu');
+            
+            jutsuMenu.innerHTML = '<h3 style="margin-bottom: 15px;">选择忍术：</h3>';
+            
+            player.jutsus.forEach((jutsu, index) => {
+                const jutsuDiv = document.createElement('div');
+                jutsuDiv.className = 'jutsu-item';
+                jutsuDiv.innerHTML = `
+                    <div class="jutsu-name">${jutsu.name}</div>
+                    <div class="jutsu-info">
+                        ${jutsu.damage < 0 ? '恢复' : '伤害'}: ${Math.abs(jutsu.damage)} | 
+                        查克拉: ${jutsu.chakraCost} | 
+                        ${jutsu.description}
+                    </div>
+                `;
+                jutsuDiv.onclick = () => {
+                    document.getElementById('jutsuMenu').style.display = 'none';
+                    
+                    if (player.useJutsu(index, gameState.enemy)) {
+                        updateUI();
+                        
+                        if (!gameState.enemy.isAlive()) {
+                            endBattle(true);
+                            return;
+                        }
+                        
+                        gameState.isPlayerTurn = false;
+                        gameState.turnInProgress = false;
+                        
+                        setTimeout(() => {
+                            enemyTurn();
+                        }, 1500);
+                    } else {
+                        gameState.turnInProgress = false;
+                    }
+                };
+                jutsuMenu.appendChild(jutsuDiv);
+            });
+            
+            jutsuMenu.style.display = 'block';
+        }
+
+        function enemyTurn() {
+            // 修复点：确保turnInProgress正确设置
+            gameState.turnInProgress = true;
+            
+            const player = gameState.player;
+            const enemy = gameState.enemy;
+            
+            // 重置敌方防御状态
+            enemy.isDefending = false;
+            
+            // AI策略
+            if (enemy.name === "春野樱" && enemy.health < 30 && enemy.chakra >= 20) {
+                enemy.useJutsu(1, enemy);
+            } else {
+                const choice = Math.random();
+                if (choice < 0.5 && enemy.jutsus.length > 0) {
+                    const jutsuIdx = Math.floor(Math.random() * enemy.jutsus.length);
+                    enemy.useJutsu(jutsuIdx, player);
+                } else if (choice < 0.8) {
+                    enemy.attack(player);
+                } else {
+                    enemy.defend();
+                }
+            }
+            
+            updateUI();
+            
+            if (!player.isAlive()) {
+                endBattle(false);
+                return;
+            }
+            
+            // 修复点：确保无论如何都会执行回合结束逻辑
+            setTimeout(() => {
+                try {
+                    // 恢复查克拉
+                    if (player && typeof player.restoreChakra === 'function') {
+                        player.restoreChakra();
+                    }
+                    if (enemy && typeof enemy.restoreChakra === 'function') {
+                        enemy.restoreChakra();
+                    }
+                    
+                    // 切换到玩家回合
+                    gameState.isPlayerTurn = true;
+                    gameState.turnInProgress = false;
+                    
+                    // 最后更新UI
+                    updateUI();
+                } catch (error) {
+                    console.error("回合切换错误:", error);
+                    // 即使出错也要重置状态
+                    gameState.isPlayerTurn = true;
+                    gameState.turnInProgress = false;
+                    updateUI();
+                }
+            }, 1500);
+        }
+
+        function endBattle(playerWon) {
+            showScreen('gameOverScreen');
+            const winnerText = document.getElementById('winnerText');
+            
+            if (playerWon) {
+                winnerText.innerHTML = `🎉 胜利！<br>${gameState.player.name} 获胜！`;
+                winnerText.style.color = '#4CAF50';
+            } else {
+                winnerText.innerHTML = `💀 战败！<br>${gameState.enemy.name} 太强了...`;
+                winnerText.style.color = '#f44336';
+            }
+        }
+
+        function resetGame() {
+            gameState = {
+                player: null,
+                enemy: null,
+                isPlayerTurn: true,
+                selectedJutsu: null,
+                turnInProgress: false
+            };
+            selectedCharacter = null;
+            showCharacterSelect();
+        }
+    </script>
+</body>
+</html>
