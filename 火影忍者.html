@@ -1,0 +1,1915 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>火影忍者 - 究极决斗场</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --ult-gold:#ffd700;
+  --skill-blue:#4fc3f7;
+  --skill-purple:#b388ff;
+  --hp-green:#4caf50;
+  --hp-yellow:#ffc107;
+  --hp-red:#f44336;
+  --chakra-blue:#2196f3;
+}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'Microsoft YaHei','PingFang SC',sans-serif;
+  background:#0a0a1a;color:#fff;
+  user-select:none;
+}
+.screen{display:none;width:100%;height:100%;position:absolute;top:0;left:0;overflow-y:auto}
+.screen.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ===== 主菜单 ===== */
+#mainMenu{
+  background:linear-gradient(180deg,#1a0a2e 0%,#16213e 50%,#0f3460 100%);
+  flex-direction:column;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+#mainMenu.active{display:flex}
+#mainMenu::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 30% 20%,rgba(255,107,0,.15),transparent 50%),
+             radial-gradient(circle at 70% 80%,rgba(124,77,255,.15),transparent 50%);
+  pointer-events:none;
+}
+.menu-title{
+  font-size:3.5em;font-weight:900;letter-spacing:8px;
+  background:linear-gradient(180deg,#ffd700 0%,#ff6b00 50%,#d32f2f 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  text-shadow:0 0 40px rgba(255,107,0,.4);
+  margin-bottom:5px;z-index:1;
+}
+.menu-subtitle{font-size:1.1em;color:#aaa;letter-spacing:12px;margin-bottom:50px;z-index:1}
+.menu-btns{display:flex;flex-direction:column;gap:15px;z-index:1}
+.menu-btn{
+  width:300px;padding:16px;font-size:1.2em;font-weight:bold;
+  background:linear-gradient(135deg,rgba(255,107,0,.9),rgba(211,47,47,.9));
+  border:2px solid rgba(255,215,0,.5);border-radius:12px;color:#fff;
+  cursor:pointer;transition:all .2s;letter-spacing:3px;
+  box-shadow:0 4px 20px rgba(255,107,0,.4),inset 0 1px 0 rgba(255,255,255,.2);
+}
+.menu-btn:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 8px 30px rgba(255,107,0,.6)}
+.menu-btn:active{transform:translateY(0)}
+.menu-btn.secondary{background:linear-gradient(135deg,rgba(60,60,80,.9),rgba(40,40,60,.9));border-color:rgba(255,255,255,.2);box-shadow:0 4px 15px rgba(0,0,0,.4)}
+.menu-footer{position:absolute;bottom:20px;color:#555;font-size:.8em;z-index:1}
+
+/* ===== 模式选择 ===== */
+#modeSelect{background:linear-gradient(180deg,#1a0a2e,#0f3460);padding:30px}
+.mode-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:30px}
+.mode-header h1{font-size:2em;color:var(--ult-gold);text-shadow:0 0 20px rgba(255,215,0,.4)}
+.back-btn{padding:8px 20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:#fff;cursor:pointer;font-size:.95em}
+.back-btn:hover{background:rgba(255,255,255,.2)}
+.mode-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;max-width:900px;margin:0 auto}
+.mode-card{
+  background:linear-gradient(160deg,rgba(40,40,70,.9),rgba(20,20,40,.95));
+  border:2px solid rgba(255,255,255,.12);border-radius:16px;padding:28px;
+  cursor:pointer;transition:all .3s;text-align:center;position:relative;overflow:hidden;
+}
+.mode-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--ult-gold),#ff6b00);opacity:0;transition:opacity .3s}
+.mode-card:hover{transform:translateY(-5px);border-color:var(--ult-gold);box-shadow:0 15px 40px rgba(255,107,0,.3)}
+.mode-card:hover::after{opacity:1}
+.mode-icon{font-size:3.5em;margin-bottom:15px}
+.mode-name{font-size:1.4em;font-weight:bold;color:var(--ult-gold);margin-bottom:10px}
+.mode-desc{font-size:.95em;color:#bbb;line-height:1.6}
+
+/* ===== 选人界面 ===== */
+#charSelect{background:linear-gradient(180deg,#1a0a2e,#16213e);padding:20px}
+.select-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}
+.select-header h1{font-size:1.8em;color:var(--ult-gold)}
+.select-info{color:#aaa;font-size:.95em;margin-bottom:15px}
+.team-slots{display:flex;gap:12px;margin-bottom:20px;justify-content:center}
+.team-slot{
+  width:80px;height:100px;border-radius:12px;
+  background:rgba(255,255,255,.05);border:2px dashed rgba(255,255,255,.2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:.8em;color:#666;transition:all .2s;position:relative;
+}
+.team-slot.filled{border-style:solid;border-color:var(--ult-gold);background:rgba(255,215,0,.1)}
+.team-slot.filled .slot-avatar{font-size:2em}
+.team-slot .slot-num{position:absolute;top:3px;left:6px;font-size:.75em;color:var(--ult-gold);font-weight:bold}
+.team-slot .slot-remove{position:absolute;top:2px;right:4px;font-size:.9em;cursor:pointer;color:#f44336;display:none}
+.team-slot.filled .slot-remove{display:block}
+.char-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;max-height:calc(100vh - 320px);overflow-y:auto;padding:5px}
+.char-card{
+  background:linear-gradient(160deg,rgba(50,50,80,.9),rgba(25,25,45,.95));
+  border:2px solid rgba(255,255,255,.12);border-radius:12px;padding:12px 8px;
+  text-align:center;cursor:pointer;transition:all .2s;position:relative;
+}
+.char-card:hover{transform:translateY(-3px);border-color:var(--skill-blue)}
+.char-card.selected{border-color:var(--ult-gold);background:linear-gradient(160deg,rgba(255,215,0,.15),rgba(50,50,80,.9));box-shadow:0 0 20px rgba(255,215,0,.3)}
+.char-card.picked{opacity:.35;pointer-events:none}
+.char-avatar{font-size:2.5em;margin-bottom:5px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+.char-name{font-size:.95em;font-weight:bold;margin-bottom:3px}
+.char-title{font-size:.7em;color:#888;margin-bottom:5px}
+.char-stats{font-size:.65em;color:#777;line-height:1.4}
+.char-stats span{margin:0 2px}
+.confirm-area{text-align:center;margin-top:15px}
+.confirm-btn{
+  padding:14px 50px;font-size:1.2em;font-weight:bold;
+  background:linear-gradient(135deg,var(--ult-gold),#ff8f00);color:#1a1a1a;
+  border:none;border-radius:12px;cursor:pointer;letter-spacing:4px;
+  box-shadow:0 4px 25px rgba(255,215,0,.5);transition:all .2s;
+}
+.confirm-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 35px rgba(255,215,0,.7)}
+.confirm-btn:disabled{background:#555;color:#888;cursor:not-allowed;box-shadow:none}
+
+/* ===== 决斗场 ===== */
+#battleScreen{background:#000;padding:0;overflow:hidden}
+.battle-top{
+  position:absolute;top:0;left:0;right:0;z-index:10;
+  display:flex;justify-content:space-between;align-items:flex-start;padding:10px 15px;
+  background:linear-gradient(180deg,rgba(0,0,0,.7),transparent);
+}
+.team-bar{display:flex;gap:6px;align-items:center}
+.team-bar.enemy{flex-direction:row-reverse}
+.team-avatar{
+  width:42px;height:42px;border-radius:8px;
+  background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.3);
+  display:flex;align-items:center;justify-content:center;font-size:1.5em;
+  transition:all .3s;position:relative;
+}
+.team-avatar.active{border-color:var(--ult-gold);box-shadow:0 0 12px rgba(255,215,0,.6);transform:scale(1.1)}
+.team-avatar.dead{opacity:.3;filter:grayscale(1)}
+.team-avatar.dead::after{content:'✕';position:absolute;color:#f44336;font-size:1.2em;font-weight:bold}
+.vs-label{font-size:1.5em;font-weight:900;color:var(--ult-gold);text-shadow:0 0 10px rgba(255,215,0,.6);align-self:center}
+
+/* 战斗场景 */
+.battle-arena{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  background:var(--arena-bg,linear-gradient(180deg,#2c3e50 0%,#1a252f 100%));
+  overflow:hidden;
+}
+.arena-bg-deco{position:absolute;inset:0;pointer-events:none}
+.arena-ground{position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(180deg,transparent,rgba(0,0,0,.5))}
+/* 场景主题 */
+.scene-konoha{--arena-bg:linear-gradient(180deg,#87ceeb 0%,#90ee90 40%,#228b22 100%)}
+.scene-valley{--arena-bg:linear-gradient(180deg,#4a148c 0%,#311b92 40%,#1a1a2e 100%)}
+.scene-akatsuki{--arena-bg:linear-gradient(180deg,#8b0000 0%,#4a0000 40%,#1a0000 100%)}
+.scene-sand{--arena-bg:linear-gradient(180deg,#f4a460 0%,#daa520 40%,#8b4513 100%)}
+.scene-rain{--arena-bg:linear-gradient(180deg,#37474f 0%,#263238 40%,#0d1117 100%)}
+
+/* 战斗角色 */
+.fighter{
+  position:absolute;bottom:22%;z-index:5;
+  display:flex;flex-direction:column;align-items:center;
+  transition:left .5s ease, right .5s ease, transform .3s;
+}
+.fighter.player-side{left:12%}
+.fighter.enemy-side{right:12%}
+.fighter-avatar{
+  font-size:6em;line-height:1;
+  filter:drop-shadow(0 6px 15px rgba(0,0,0,.6));
+  transition:all .3s;display:inline-block;
+}
+.fighter-name-tag{
+  margin-top:5px;padding:3px 14px;border-radius:20px;
+  background:rgba(0,0,0,.6);font-size:.85em;font-weight:bold;
+  border:1px solid rgba(255,255,255,.2);white-space:nowrap;
+}
+/* 战斗动画 */
+.fighter.attacking .fighter-avatar{animation:atkShake .35s ease}
+.fighter.player-side.attacking{transform:translateX(60px)}
+.fighter.enemy-side.attacking{transform:translateX(-60px)}
+@keyframes atkShake{0%,100%{transform:rotate(0) scale(1)}30%{transform:rotate(-15deg) scale(1.15)}70%{transform:rotate(10deg) scale(1.1)}}
+.fighter.hurt .fighter-avatar{animation:hurtFlash .4s ease}
+@keyframes hurtFlash{0%,100%{filter:drop-shadow(0 6px 15px rgba(0,0,0,.6))}50%{filter:drop-shadow(0 0 25px #f44336) brightness(2.5);transform:translateX(-8px)}}
+.fighter.enemy-side.hurt .fighter-avatar{animation:hurtFlashR .4s ease}
+@keyframes hurtFlashR{0%,100%{filter:drop-shadow(0 6px 15px rgba(0,0,0,.6))}50%{filter:drop-shadow(0 0 25px #f44336) brightness(2.5);transform:translateX(8px)}}
+.fighter.healing .fighter-avatar{animation:healGlow .8s ease}
+@keyframes healGlow{0%,100%{filter:drop-shadow(0 6px 15px rgba(0,0,0,.6))}50%{filter:drop-shadow(0 0 30px #4caf50) brightness(1.4)}}
+.fighter.ultimate .fighter-avatar{animation:ultPulse 1s ease}
+@keyframes ultPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.4);filter:drop-shadow(0 0 50px gold) brightness(1.6)}}
+.fighter.dead{opacity:.2;filter:grayscale(1);transform:rotate(90deg) !important}
+.fighter.switch-in{animation:switchIn .5s ease}
+@keyframes switchIn{from{opacity:0;transform:translateY(30px) scale(.8)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* 状态效果图标 */
+.status-icons{position:absolute;top:-25px;left:50%;transform:translateX(-50%);display:flex;gap:3px}
+.status-icon{font-size:1.1em;animation:statusBounce 1s infinite}
+@keyframes statusBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+/* 血条区域（浮动在角色上方） */
+.hp-display{
+  position:absolute;top:-70px;left:50%;transform:translateX(-50%);
+  width:160px;text-align:center;
+}
+.hp-bar-bg{
+  height:14px;background:rgba(0,0,0,.6);border-radius:8px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.25);position:relative;
+}
+.hp-bar-fill{
+  height:100%;border-radius:8px;transition:width .4s ease;
+  background:linear-gradient(90deg,#f44336,#ffc107,#4caf50);
+  background-size:300% 100%;background-position:right;
+}
+.hp-text{font-size:.75em;margin-top:2px;text-shadow:0 1px 3px rgba(0,0,0,.8);font-weight:bold}
+
+/* ===== 底部操作区 ===== */
+.battle-bottom{
+  position:absolute;bottom:0;left:0;right:0;z-index:10;
+  background:linear-gradient(0deg,rgba(0,0,0,.85) 0%,rgba(0,0,0,.6) 70%,transparent 100%);
+  padding:12px 15px 15px;
+}
+/* 奥义点 */
+.ult-points{display:flex;justify-content:center;gap:8px;margin-bottom:8px}
+.ult-point{
+  width:18px;height:18px;border-radius:50%;
+  background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.3);
+  transition:all .3s;
+}
+.ult-point.filled{
+  background:radial-gradient(circle,#ffd700,#ff8f00);
+  border-color:#ffd700;box-shadow:0 0 10px rgba(255,215,0,.8);
+  animation:ultPointGlow 1.5s ease infinite;
+}
+@keyframes ultPointGlow{0%,100%{box-shadow:0 0 10px rgba(255,215,0,.8)}50%{box-shadow:0 0 18px rgba(255,215,0,1)}}
+.ult-point.full{animation:ultFullPulse .8s ease infinite}
+@keyframes ultFullPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+
+/* 技能栏 */
+.skill-bar{display:flex;justify-content:center;align-items:flex-end;gap:12px}
+.skill-btn{
+  width:68px;height:68px;border-radius:50%;position:relative;
+  background:radial-gradient(circle at 35% 30%,rgba(79,195,247,.4),rgba(33,150,243,.6));
+  border:3px solid rgba(79,195,247,.6);color:#fff;
+  cursor:pointer;transition:all .15s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:0 4px 15px rgba(0,0,0,.5),inset 0 2px 8px rgba(255,255,255,.2);
+}
+.skill-btn:hover:not(:disabled){transform:translateY(-3px) scale(1.05);box-shadow:0 8px 25px rgba(79,195,247,.5)}
+.skill-btn:active:not(:disabled){transform:scale(.95)}
+.skill-btn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.5)}
+.skill-btn .skill-icon{font-size:1.8em;line-height:1}
+.skill-btn .skill-key{position:absolute;top:-2px;right:-2px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.7);font-size:.7em;display:flex;align-items:center;justify-content:center;font-weight:bold}
+.skill-btn .cd-overlay{
+  position:absolute;inset:0;border-radius:50%;
+  background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;
+  font-size:1.4em;font-weight:bold;color:#ff9800;
+}
+/* 奥义按钮 */
+.skill-btn.ultimate{
+  width:80px;height:80px;
+  background:radial-gradient(circle at 35% 30%,rgba(255,215,0,.5),rgba(255,143,0,.7));
+  border-color:var(--ult-gold);
+  box-shadow:0 4px 20px rgba(255,215,0,.5),inset 0 2px 10px rgba(255,255,255,.3);
+}
+.skill-btn.ultimate.ready{
+  animation:ultReady 1s ease infinite;
+}
+@keyframes ultReady{
+  0%,100%{box-shadow:0 4px 20px rgba(255,215,0,.5),inset 0 2px 10px rgba(255,255,255,.3)}
+  50%{box-shadow:0 4px 35px rgba(255,215,0,.9),inset 0 2px 15px rgba(255,255,255,.5);transform:scale(1.08)}
+}
+.skill-btn.ultimate .skill-icon{font-size:2.2em}
+/* 普攻按钮 */
+.skill-btn.basic{
+  background:radial-gradient(circle at 35% 30%,rgba(255,152,0,.4),rgba(244,67,54,.6));
+  border-color:rgba(255,152,0,.6);
+}
+
+/* 回合提示 */
+.turn-banner{
+  position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);
+  font-size:2.5em;font-weight:900;letter-spacing:6px;z-index:20;
+  text-shadow:0 0 20px currentColor,0 4px 10px rgba(0,0,0,.8);
+  animation:turnBannerAnim 1.2s ease forwards;pointer-events:none;
+}
+@keyframes turnBannerAnim{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}
+  20%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}
+  80%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.2)}
+}
+
+/* 伤害飘字 */
+.damage-layer{position:absolute;inset:0;pointer-events:none;z-index:15;overflow:hidden}
+.dmg-text{
+  position:absolute;font-weight:900;
+  text-shadow:2px 2px 4px rgba(0,0,0,.9),0 0 10px currentColor;
+  animation:dmgFloat 1.1s ease-out forwards;white-space:nowrap;
+}
+.dmg-text.dmg{color:#ff5252;font-size:1.8em}
+.dmg-text.crit{color:#ff0000;font-size:2.6em}
+.dmg-text.heal{color:#69f0ae;font-size:1.6em}
+.dmg-text.point{color:#ffd700;font-size:1.3em}
+@keyframes dmgFloat{
+  0%{opacity:0;transform:translateY(10px) scale(.4)}
+  20%{opacity:1;transform:translateY(-15px) scale(1.2)}
+  100%{opacity:0;transform:translateY(-70px) scale(1)}
+}
+
+/* 奥义特效 */
+.ult-effect{
+  position:absolute;inset:0;z-index:18;pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle,rgba(255,215,0,.3),transparent 70%);
+  animation:ultEffect 1.5s ease forwards;
+}
+.ult-effect .ult-text{
+  font-size:4em;font-weight:900;color:var(--ult-gold);
+  text-shadow:0 0 30px rgba(255,215,0,.8),0 4px 15px rgba(0,0,0,.8);
+  letter-spacing:8px;animation:ultTextAnim 1.5s ease;
+}
+@keyframes ultEffect{0%{opacity:0}20%{opacity:1}80%{opacity:1}100%{opacity:0}}
+@keyframes ultTextAnim{0%{transform:scale(.3) rotate(-10deg);opacity:0}30%{transform:scale(1.2) rotate(0);opacity:1}70%{transform:scale(1)}100%{transform:scale(1.5);opacity:0}}
+
+/* 战斗日志 */
+.battle-log{
+  position:absolute;top:70px;left:50%;transform:translateX(-50%);
+  width:90%;max-width:500px;max-height:100px;overflow-y:auto;
+  background:rgba(0,0,0,.5);border-radius:8px;padding:8px 12px;
+  font-size:.8em;z-index:8;pointer-events:none;
+}
+.battle-log::-webkit-scrollbar{width:4px}
+.battle-log::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:2px}
+.log-line{margin:2px 0;opacity:.9;animation:logIn .3s ease}
+@keyframes logIn{from{opacity:0;transform:translateX(-10px)}to{opacity:.9;transform:translateX(0)}}
+.log-line.player{color:#81d4fa}
+.log-line.enemy{color:#ef9a9a}
+.log-line.system{color:#fff59d}
+.log-line.crit{color:#ff5252;font-weight:bold}
+
+/* 暂停按钮 */
+.pause-btn{
+  position:absolute;top:10px;right:50%;transform:translateX(50%);
+  z-index:12;padding:6px 16px;background:rgba(0,0,0,.5);
+  border:1px solid rgba(255,255,255,.2);border-radius:20px;color:#fff;
+  cursor:pointer;font-size:.85em;
+}
+.pause-btn:hover{background:rgba(0,0,0,.7)}
+
+/* ===== 结算界面 ===== */
+#resultScreen{
+  background:linear-gradient(180deg,#1a0a2e,#0f3460);
+  flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:20px;
+}
+#resultScreen.active{display:flex}
+.result-icon{font-size:6em;margin-bottom:15px;animation:resultBounce 1s ease infinite}
+@keyframes resultBounce{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+.result-title{font-size:3em;font-weight:900;letter-spacing:10px;margin-bottom:15px}
+.result-title.win{color:var(--ult-gold);text-shadow:0 0 30px rgba(255,215,0,.6)}
+.result-title.lose{color:#ef5350;text-shadow:0 0 30px rgba(239,83,80,.5)}
+.result-detail{font-size:1.1em;color:#bbb;margin-bottom:25px;line-height:1.8}
+.result-stats{
+  background:rgba(0,0,0,.4);border-radius:12px;padding:20px 30px;
+  margin-bottom:25px;text-align:left;display:inline-block;
+}
+.result-stats div{margin:5px 0;font-size:.95em}
+.result-btns{display:flex;gap:15px;flex-wrap:wrap;justify-content:center}
+.result-btn{
+  padding:12px 30px;font-size:1em;font-weight:bold;border-radius:10px;
+  border:none;cursor:pointer;transition:all .2s;color:#fff;
+}
+.result-btn.gold{background:linear-gradient(135deg,var(--ult-gold),#ff8f00);color:#1a1a1a}
+.result-btn.red{background:linear-gradient(135deg,#f44336,#c62828)}
+.result-btn.gray{background:linear-gradient(135deg,#546e7a,#37474f)}
+.result-btn:hover{transform:translateY(-2px)}
+
+/* ===== 角色图鉴 ===== */
+#charIntro{background:linear-gradient(180deg,#1a0a2e,#16213e);padding:20px}
+.intro-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:15px}
+.intro-card{
+  background:rgba(40,40,70,.8);border:2px solid rgba(255,255,255,.1);
+  border-radius:10px;padding:10px 5px;text-align:center;cursor:pointer;transition:all .2s;
+}
+.intro-card:hover{border-color:var(--skill-blue);transform:translateY(-2px)}
+.intro-card .avatar{font-size:2em}
+.intro-card .name{font-size:.8em;margin-top:3px}
+.intro-detail{
+  background:rgba(0,0,0,.4);border-radius:12px;padding:20px;
+  max-height:calc(100vh - 280px);overflow-y:auto;
+}
+.intro-detail .header{display:flex;align-items:center;gap:15px;margin-bottom:15px}
+.intro-detail .big-avatar{font-size:3.5em}
+.intro-detail .name{font-size:1.5em;font-weight:bold;color:var(--ult-gold)}
+.intro-detail .title{color:#aaa;font-size:.9em}
+.intro-detail .stats-row{display:flex;gap:15px;flex-wrap:wrap;margin-bottom:15px;font-size:.85em}
+.intro-detail .stat{background:rgba(255,255,255,.08);padding:5px 12px;border-radius:6px}
+.intro-detail .skill-item{
+  background:rgba(255,255,255,.05);border-radius:8px;padding:10px 15px;margin:8px 0;
+  border-left:3px solid var(--skill-blue);
+}
+.intro-detail .skill-item.ult{border-left-color:var(--ult-gold)}
+.intro-detail .skill-name{font-weight:bold;color:var(--skill-blue)}
+.intro-detail .skill-item.ult .skill-name{color:var(--ult-gold)}
+.intro-detail .skill-desc{font-size:.85em;color:#bbb;margin-top:3px}
+
+/* ===== 剧情模式 ===== */
+.story-stage{
+  background:linear-gradient(160deg,rgba(50,50,80,.9),rgba(25,25,45,.95));
+  border:2px solid rgba(255,255,255,.12);border-radius:14px;
+  padding:18px 20px;margin:12px 0;cursor:pointer;transition:all .25s;
+  display:flex;align-items:center;gap:18px;position:relative;overflow:hidden;
+}
+.story-stage:hover:not(.locked){transform:translateX(5px);border-color:var(--ult-gold);box-shadow:0 6px 25px rgba(255,215,0,.25)}
+.story-stage.locked{opacity:.4;cursor:not-allowed}
+.story-stage.completed{border-color:var(--hp-green)}
+.story-stage .stage-num{
+  font-size:2em;font-weight:900;color:var(--ult-gold);min-width:50px;text-align:center;
+  text-shadow:0 0 15px rgba(255,215,0,.4);
+}
+.story-stage .stage-info{flex:1}
+.story-stage .stage-name{font-size:1.2em;font-weight:bold;margin-bottom:4px}
+.story-stage .stage-desc{font-size:.85em;color:#aaa;margin-bottom:4px}
+.story-stage .stage-enemy{font-size:.8em;color:#888}
+.story-stage .stage-enemy span{margin-right:8px}
+.story-stage .stage-status{font-size:1.8em}
+.story-stage .stage-reward{
+  display:inline-block;margin-top:4px;padding:2px 10px;border-radius:10px;
+  background:rgba(255,215,0,.15);color:var(--ult-gold);font-size:.75em;
+}
+
+/* ===== 响应式 ===== */
+@media(max-width:600px){
+  .menu-title{font-size:2.2em;letter-spacing:4px}
+  .menu-subtitle{font-size:.85em;letter-spacing:6px}
+  .menu-btn{width:250px;padding:14px;font-size:1.05em}
+  .fighter-avatar{font-size:4em}
+  .hp-display{width:120px;top:-55px}
+  .skill-btn{width:56px;height:56px}
+  .skill-btn .skill-icon{font-size:1.5em}
+  .skill-btn.ultimate{width:68px;height:68px}
+  .skill-btn.ultimate .skill-icon{font-size:1.8em}
+  .team-avatar{width:34px;height:34px;font-size:1.2em}
+  .char-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+  .result-title{font-size:2em;letter-spacing:6px}
+}
+</style>
+</head>
+<body>
+
+<!-- 主菜单 -->
+<div id="mainMenu" class="screen active">
+  <div class="menu-title">火 影 忍 者</div>
+  <div class="menu-btns">
+    <button class="menu-btn" onclick="showModeSelect()">🎮 开始游戏</button>
+    <button class="menu-btn secondary" onclick="showCharIntro()">📖 忍者图鉴</button>
+    <button class="menu-btn secondary" onclick="showSettings()">⚙️ 设置</button>
+  </div>
+  <div class="menu-footer">3v3 组队 · 奥义点系统 · 33位忍者</div>
+</div>
+
+<!-- 模式选择 -->
+<div id="modeSelect" class="screen">
+  <div class="mode-header">
+    <h1>选择模式</h1>
+    <button class="back-btn" onclick="showMainMenu()">← 返回</button>
+  </div>
+  <div class="mode-cards">
+    <div class="mode-card" onclick="startMode('3v3')">
+      <div class="mode-icon">⚔️</div>
+      <div class="mode-name">3v3 决斗场</div>
+      <div class="mode-desc">选择3名忍者组成队伍，轮流上场对决，击败对方全部忍者获胜</div>
+    </div>
+    <div class="mode-card" onclick="startMode('1v1')">
+      <div class="mode-icon">🎯</div>
+      <div class="mode-name">1v1 单挑</div>
+      <div class="mode-desc">选择1名忍者与AI进行单挑，适合练习技能连招</div>
+    </div>
+    <div class="mode-card" onclick="startMode('survival')">
+      <div class="mode-icon">🏆</div>
+      <div class="mode-name">生存挑战</div>
+      <div class="mode-desc">你的3人小队挑战源源不断的敌人，看能坚持到第几关</div>
+    </div>
+    <div class="mode-card" onclick="showStoryMode()">
+      <div class="mode-icon">📜</div>
+      <div class="mode-name">剧情模式</div>
+      <div class="mode-desc">跟随经典战役关卡，挑战固定敌人阵容，通关进度自动保存</div>
+    </div>
+  </div>
+</div>
+
+<!-- 选人界面 -->
+<div id="charSelect" class="screen">
+  <div class="select-header">
+    <h1 id="selectTitle">选择你的忍者</h1>
+    <button class="back-btn" onclick="showModeSelect()">← 返回</button>
+  </div>
+  <div class="select-info" id="selectInfo">选择 3 名忍者组成你的决斗小队（点击添加，点击✕移除）</div>
+  <div class="team-slots" id="teamSlots"></div>
+  <div class="char-grid" id="charGrid"></div>
+  <div class="confirm-area">
+    <button class="confirm-btn" id="confirmBtn" onclick="confirmTeam()" disabled>确 认 出 战</button>
+  </div>
+</div>
+
+<!-- 决斗场 -->
+<div id="battleScreen" class="screen">
+  <div class="battle-arena scene-konoha" id="battleArena">
+    <div class="arena-bg-deco"></div>
+    <div class="arena-ground"></div>
+
+    <!-- 顶部队伍栏 -->
+    <div class="battle-top">
+      <div class="team-bar" id="playerTeamBar"></div>
+      <div class="vs-label">VS</div>
+      <div class="team-bar enemy" id="enemyTeamBar"></div>
+    </div>
+
+    <!-- 战斗日志 -->
+    <div class="battle-log" id="battleLog"></div>
+
+    <!-- 玩家角色 -->
+    <div class="fighter player-side" id="playerFighter">
+      <div class="status-icons" id="playerStatus"></div>
+      <div class="hp-display">
+        <div class="hp-bar-bg"><div class="hp-bar-fill" id="playerHpFill" style="width:100%"></div></div>
+        <div class="hp-text" id="playerHpText">100/100</div>
+      </div>
+      <div class="fighter-avatar" id="playerAvatar">🍥</div>
+      <div class="fighter-name-tag" id="playerName">漩涡鸣人</div>
+    </div>
+
+    <!-- 敌人角色 -->
+    <div class="fighter enemy-side" id="enemyFighter">
+      <div class="status-icons" id="enemyStatus"></div>
+      <div class="hp-display">
+        <div class="hp-bar-bg"><div class="hp-bar-fill" id="enemyHpFill" style="width:100%"></div></div>
+        <div class="hp-text" id="enemyHpText">100/100</div>
+      </div>
+      <div class="fighter-avatar" id="enemyAvatar">⚡</div>
+      <div class="fighter-name-tag" id="enemyName">宇智波佐助</div>
+    </div>
+
+    <!-- 伤害飘字层 -->
+    <div class="damage-layer" id="damageLayer"></div>
+  </div>
+
+  <!-- 底部操作区 -->
+  <div class="battle-bottom">
+    <div class="ult-points" id="ultPoints">
+      <div class="ult-point"></div>
+      <div class="ult-point"></div>
+      <div class="ult-point"></div>
+      <div class="ult-point"></div>
+    </div>
+    <div class="skill-bar" id="skillBar">
+      <!-- 动态生成技能按钮 -->
+    </div>
+  </div>
+
+  <button class="pause-btn" onclick="quitBattle()">⏸ 退出</button>
+</div>
+
+<!-- 结算界面 -->
+<div id="resultScreen" class="screen">
+  <div class="result-icon" id="resultIcon">🏆</div>
+  <div class="result-title win" id="resultTitle">胜 利</div>
+  <div class="result-detail" id="resultDetail"></div>
+  <div class="result-stats" id="resultStats"></div>
+  <div class="result-btns" id="resultBtns">
+    <button class="result-btn gold" onclick="rematch()">🔄 再来一局</button>
+    <button class="result-btn red" onclick="showModeSelect()">📋 更换模式</button>
+    <button class="result-btn gray" onclick="showMainMenu()">🏠 主菜单</button>
+  </div>
+</div>
+
+<!-- 剧情模式 -->
+<div id="storyMode" class="screen">
+  <div class="select-header">
+    <h1>剧情模式</h1>
+    <button class="back-btn" onclick="showModeSelect()">← 返回</button>
+  </div>
+  <div style="max-width:700px;margin:0 auto" id="storyList"></div>
+</div>
+
+<!-- 忍者图鉴 -->
+<div id="charIntro" class="screen">
+  <div class="select-header">
+    <h1>忍者图鉴</h1>
+    <button class="back-btn" onclick="showMainMenu()">← 返回</button>
+  </div>
+  <div class="intro-grid" id="introGrid"></div>
+  <div class="intro-detail" id="introDetail" style="display:none"></div>
+</div>
+
+<!-- 设置 -->
+<div id="settingsScreen" class="screen">
+  <div class="select-header">
+    <h1>游戏设置</h1>
+    <button class="back-btn" onclick="showMainMenu()">← 返回</button>
+  </div>
+  <div style="max-width:500px;margin:30px auto;background:rgba(0,0,0,.3);border-radius:12px;padding:25px">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+      <span>🔊 音效音量</span>
+      <input type="range" id="sfxVol" min="0" max="100" value="70" style="width:180px;accent-color:#ffd700" oninput="setSfxVol(this.value)">
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+      <span>⚡ 战斗速度</span>
+      <select id="battleSpeed" style="padding:6px 14px;border-radius:6px;background:#333;color:#fff;border:1px solid #555" onchange="setSpeed(this.value)">
+        <option value="slow">慢速</option>
+        <option value="normal" selected>正常</option>
+        <option value="fast">快速</option>
+      </select>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0">
+      <span>📜 战斗日志</span>
+      <label style="cursor:pointer"><input type="checkbox" id="showLog" checked onchange="toggleLog(this.checked)"> 显示</label>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  火影忍者究极决斗场 - 核心逻辑
+// ============================================================
+
+// ===== 设置 =====
+const SETTINGS = { sfx:0.7, speed:'normal', showLog:true };
+const SPEED = { slow:1.6, normal:1.0, fast:0.55 };
+function delay(ms){ return Math.floor(ms * SPEED[SETTINGS.speed]); }
+function setSfxVol(v){ SETTINGS.sfx = v/100; initAudio(); }
+function setSpeed(v){ SETTINGS.speed = v; }
+function toggleLog(s){ SETTINGS.showLog = s; document.getElementById('battleLog').style.display = s?'block':'none'; }
+
+// ===== 音效系统 =====
+let audioCtx = null;
+function initAudio(){
+  if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+}
+function tone(freq,dur,type='sine',vol=0.25){
+  if(!audioCtx||SETTINGS.sfx<=0) return;
+  try{
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type=type;o.frequency.value=freq;
+    g.gain.setValueAtTime(vol*SETTINGS.sfx,audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);
+    o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+dur);
+  }catch(e){}
+}
+function noise(dur,vol=0.2){
+  if(!audioCtx||SETTINGS.sfx<=0) return;
+  try{
+    const n=audioCtx.sampleRate*dur,buf=audioCtx.createBuffer(1,n,audioCtx.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+    const s=audioCtx.createBufferSource(),g=audioCtx.createGain();
+    s.buffer=buf;g.gain.setValueAtTime(vol*SETTINGS.sfx,audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);
+    s.connect(g);g.connect(audioCtx.destination);s.start();
+  }catch(e){}
+}
+const SFX = {
+  attack:()=>{noise(0.12,0.25);tone(140,0.1,'square',0.12)},
+  hit:()=>{noise(0.08,0.3);tone(70,0.12,'sawtooth',0.18)},
+  crit:()=>{noise(0.18,0.35);tone(180,0.08,'square',0.22);setTimeout(()=>tone(90,0.12,'sawtooth',0.18),40)},
+  skill:()=>{tone(380,0.08,'sine',0.18);setTimeout(()=>tone(560,0.12,'sine',0.18),70);setTimeout(()=>tone(760,0.15,'sine',0.14),140)},
+  ult:()=>{for(let i=0;i<6;i++)setTimeout(()=>tone(280+i*90,0.22,'sine',0.2),i*90);noise(0.5,0.18)},
+  heal:()=>{tone(500,0.12,'sine',0.18);setTimeout(()=>tone(640,0.12,'sine',0.18),90);setTimeout(()=>tone(780,0.2,'sine',0.16),180)},
+  point:()=>{tone(900,0.06,'sine',0.12);setTimeout(()=>tone(1200,0.08,'sine',0.1),50)},
+  defend:()=>{tone(280,0.18,'triangle',0.18)},
+  switch:()=>{tone(400,0.1,'sine',0.15);setTimeout(()=>tone(600,0.15,'sine',0.15),80)},
+  victory:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,0.28,'sine',0.22),i*140))},
+  defeat:()=>{[380,320,260,180].forEach((f,i)=>setTimeout(()=>tone(f,0.32,'sawtooth',0.18),i*170))},
+  click:()=>{tone(580,0.04,'square',0.08)},
+  select:()=>{tone(750,0.06,'sine',0.12)}
+};
+
+// ===== 忍者数据库 =====
+const NINJAS = {
+  naruto:{
+    id:'naruto',name:'漩涡鸣人',title:'木叶忍者 · 九尾人柱力',avatar:'🍥',
+    stats:{hp:130,atk:18,def:12,spd:14,crit:10,critDmg:150},
+    skills:[
+      {name:'影分身术',icon:'👥',damage:24,desc:'制造分身围攻敌人，获得1点奥义点'},
+      {name:'螺旋丸',icon:'🌀',damage:38,desc:'查克拉旋转的冲击波，获得1点奥义点'},
+      {name:'九尾查克拉之手',icon:'🦊',damage:32,desc:'尾兽化查克拉手臂攻击，获得1点奥义点',buff:{atkUp:5,dur:2}},
+      {name:'仙法·超大玉螺旋多连丸',icon:'🌟',damage:85,ult:true,desc:'【奥义】仙人模式终极螺旋丸连打，消耗4点奥义点'}
+    ]
+  },
+  sasuke:{
+    id:'sasuke',name:'宇智波佐助',title:'宇智波 · 轮回眼',avatar:'⚡',
+    stats:{hp:115,atk:22,def:10,spd:17,crit:15,critDmg:160},
+    skills:[
+      {name:'火遁·豪火球',icon:'🔥',damage:28,desc:'巨大火球灼烧敌人，获得1点奥义点'},
+      {name:'千鸟',icon:'⚡',damage:42,desc:'雷属性突刺攻击，获得1点奥义点'},
+      {name:'天照',icon:'⬛',damage:35,desc:'黑色火焰附加灼烧，获得1点奥义点',debuff:{burn:8,dur:2}},
+      {name:'因陀罗之矢',icon:'🏹',damage:90,ult:true,desc:'【奥义】须佐能乎射出的毁灭之矢，消耗4点奥义点'}
+    ]
+  },
+  sakura:{
+    id:'sakura',name:'春野樱',title:'木叶 · 医疗忍者',avatar:'🌸',
+    stats:{hp:100,atk:20,def:11,spd:13,crit:8,critDmg:140},
+    skills:[
+      {name:'怪力拳',icon:'👊',damage:30,desc:'精确查克拉控制的怪力，获得1点奥义点'},
+      {name:'樱花冲',icon:'💢',damage:36,desc:'连续体术猛攻，获得1点奥义点'},
+      {name:'医疗忍术',icon:'💚',heal:40,desc:'恢复40点生命，获得1点奥义点'},
+      {name:'百豪·创造再生',icon:'✨',heal:75,ult:true,shield:25,desc:'【奥义】瞬间大量恢复生命并获得护盾，消耗4点奥义点'}
+    ]
+  },
+  kakashi:{
+    id:'kakashi',name:'旗木卡卡西',title:'拷贝忍者 · 六代目',avatar:'📖',
+    stats:{hp:110,atk:19,def:13,spd:16,crit:12,critDmg:155},
+    skills:[
+      {name:'雷切',icon:'⚡',damage:35,desc:'雷属性查克拉刀突刺，获得1点奥义点'},
+      {name:'水遁·水龙弹',icon:'🐉',damage:32,desc:'召唤水龙冲击敌人，获得1点奥义点'},
+      {name:'土遁·土流壁',icon:'🧱',damage:18,desc:'土墙防御并反击，获得1点奥义点',buff:{defUp:8,dur:2}},
+      {name:'神威·雷切双穿光',icon:'💫',damage:88,ult:true,desc:'【奥义】双雷切贯穿+空间扭曲，消耗4点奥义点'}
+    ]
+  },
+  itachi:{
+    id:'itachi',name:'宇智波鼬',title:'晓 · 幻术大师',avatar:'👁️',
+    stats:{hp:108,atk:20,def:11,spd:15,crit:13,critDmg:155},
+    skills:[
+      {name:'月读',icon:'🌙',damage:30,desc:'幻术空间攻击，30%眩晕，获得1点奥义点',debuff:{stun:30}},
+      {name:'天照',icon:'⬛',damage:38,desc:'黑火焰灼烧，获得1点奥义点',debuff:{burn:10,dur:2}},
+      {name:'乌鸦分身',icon:'🐦‍⬛',damage:26,desc:'乌鸦分身扰乱攻击，获得1点奥义点'},
+      {name:'须佐能乎·十拳剑',icon:'⚔️',damage:92,ult:true,stun:100,desc:'【奥义】封印之剑，必定眩晕，消耗4点奥义点'}
+    ]
+  },
+  jiraiya:{
+    id:'jiraiya',name:'自来也',title:'三忍 · 蛤蟆仙人',avatar:'🐸',
+    stats:{hp:125,atk:21,def:12,spd:12,crit:11,critDmg:150},
+    skills:[
+      {name:'螺旋丸',icon:'🌀',damage:32,desc:'查克拉旋转冲击波，获得1点奥义点'},
+      {name:'蛤蟆油炎弹',icon:'🔥',damage:36,desc:'蛤蟆油+火焰大范围攻击，获得1点奥义点'},
+      {name:'针地狱',icon:'📌',damage:30,desc:'头发化作尖刺，获得1点奥义点'},
+      {name:'仙法·超大玉螺旋丸',icon:'🌕',damage:90,ult:true,desc:'【奥义】仙人模式究极螺旋丸，消耗4点奥义点'}
+    ]
+  },
+  tsunade:{
+    id:'tsunade',name:'纲手',title:'三忍 · 五代目火影',avatar:'💎',
+    stats:{hp:135,atk:23,def:14,spd:10,crit:9,critDmg:145},
+    skills:[
+      {name:'痛天脚',icon:'🦵',damage:34,desc:'查克拉注入的毁灭踢击，获得1点奥义点'},
+      {name:'怪力冲',icon:'💥',damage:38,desc:'怪力连续打击，获得1点奥义点'},
+      {name:'医疗忍术',icon:'💚',heal:45,desc:'恢复45点生命，获得1点奥义点'},
+      {name:'百豪·创造再生',icon:'✨',heal:80,ult:true,shield:30,desc:'【奥义】究极医疗忍术，消耗4点奥义点'}
+    ]
+  },
+  orochimaru:{
+    id:'orochimaru',name:'大蛇丸',title:'三忍 · 不死忍者',avatar:'🐍',
+    stats:{hp:118,atk:19,def:11,spd:14,crit:14,critDmg:160},
+    skills:[
+      {name:'潜影蛇手',icon:'🐍',damage:28,desc:'蛇群从袖中攻击，获得1点奥义点'},
+      {name:'毒雾',icon:'☠️',damage:22,desc:'剧毒雾气附加中毒，获得1点奥义点',debuff:{poison:10,dur:3}},
+      {name:'秽土转生',icon:'💀',damage:40,desc:'召唤亡者攻击，获得1点奥义点'},
+      {name:'八岐之术·吞噬',icon:'🕳️',damage:82,ult:true,lifesteal:35,desc:'【奥义】八岐大蛇吞噬生命力，消耗4点奥义点'}
+    ]
+  },
+  pain:{
+    id:'pain',name:'佩恩',title:'晓首领 · 轮回眼',avatar:'🔮',
+    stats:{hp:122,atk:21,def:12,spd:13,crit:12,critDmg:155},
+    skills:[
+      {name:'神罗天征',icon:'💫',damage:32,desc:'斥力弹开伤害敌人，获得1点奥义点'},
+      {name:'万象天引',icon:'🧲',damage:28,desc:'引力拉扯敌人，获得1点奥义点'},
+      {name:'地爆天星',icon:'🌑',damage:36,desc:'引力球封印，35%眩晕，获得1点奥义点',debuff:{stun:35}},
+      {name:'超·神罗天征',icon:'💥',damage:95,ult:true,desc:'【奥义】毁灭一切的究极斥力，消耗4点奥义点'}
+    ]
+  },
+  madara:{
+    id:'madara',name:'宇智波斑',title:'宇智波之神',avatar:'👹',
+    stats:{hp:140,atk:24,def:15,spd:12,crit:14,critDmg:165},
+    skills:[
+      {name:'豪火灭失',icon:'🔥',damage:36,desc:'毁灭性大范围火焰，获得1点奥义点'},
+      {name:'须佐能乎·斩',icon:'⚔️',damage:42,desc:'完全体须佐斩击，获得1点奥义点'},
+      {name:'吸术封尽',icon:'🌀',damage:30,desc:'吸收查克拉并造成伤害，获得1点奥义点',chakraDrain:15},
+      {name:'天碍震星',icon:'☄️',damage:100,ult:true,desc:'【奥义】召唤陨石毁灭战场，消耗4点奥义点'}
+    ]
+  },
+  rocklee:{
+    id:'rocklee',name:'李洛克',title:'木叶美丽野兽',avatar:'🥋',
+    stats:{hp:110,atk:25,def:10,spd:20,crit:18,critDmg:170},
+    skills:[
+      {name:'表莲华',icon:'🌀',damage:30,desc:'高速连击体术，获得1点奥义点'},
+      {name:'木叶旋风',icon:'🌪️',damage:28,desc:'强力回旋踢，获得1点奥义点'},
+      {name:'里莲华',icon:'💢',damage:44,desc:'三门开启的猛攻，自损8血，获得1点奥义点',selfDmg:8},
+      {name:'夜凯',icon:'🦅',damage:105,ult:true,selfDmg:20,desc:'【奥义】八门全开究极一击，自损20血，消耗4点奥义点'}
+    ]
+  },
+  gaara:{
+    id:'gaara',name:'我爱罗',title:'五代目风影',avatar:'🏜️',
+    stats:{hp:128,atk:17,def:18,spd:9,crit:8,critDmg:140},
+    skills:[
+      {name:'砂瀑送葬',icon:'⏳',damage:28,desc:'砂子包裹压碎敌人，获得1点奥义点'},
+      {name:'砂缚柩',icon:'📦',damage:26,desc:'砂子束缚挤压，30%眩晕，获得1点奥义点',debuff:{stun:30}},
+      {name:'守鹤之盾',icon:'🛡️',damage:15,desc:'绝对防御+反击，获得1点奥义点',buff:{defUp:12,dur:2}},
+      {name:'砂瀑界法·松',icon:'🏔️',damage:85,ult:true,desc:'【奥义】覆盖战场的砂瀑大葬，消耗4点奥义点'}
+    ]
+  },
+  // ===== 新增21位忍者 =====
+  obito_war:{
+    id:'obito_war',name:'忍战带土',title:'十尾人柱力 · 第二位六道',avatar:'🌑',
+    stats:{hp:135,atk:23,def:13,spd:16,crit:14,critDmg:160},
+    skills:[
+      {name:'神威',icon:'🌀',damage:32,desc:'万花筒写轮眼的空间扭曲，30%眩晕，获得1点奥义点',debuff:{stun:30}},
+      {name:'火遁·暴风乱舞',icon:'🔥',damage:38,desc:'神威空间喷出的火焰，获得1点奥义点'},
+      {name:'阴阳遁·黑棒',icon:'⬛',damage:35,desc:'阴阳遁黑棒刺入，封印查克拉，获得1点奥义点',debuff:{burn:6,dur:2}},
+      {name:'无限月读',icon:'🌕',damage:95,ult:true,stun:100,desc:'【奥义】神树绽放的无限月读，必定眩晕，消耗4点奥义点'}
+    ]
+  },
+  hashirama_edo:{
+    id:'hashirama_edo',name:'秽土柱间',title:'初代目火影 · 忍者之神',avatar:'🌳',
+    stats:{hp:150,atk:22,def:16,spd:11,crit:10,critDmg:150},
+    skills:[
+      {name:'木遁·木龙之术',icon:'🐉',damage:36,desc:'召唤木龙缠绕攻击，获得1点奥义点'},
+      {name:'木遁·木人之术',icon:'🗿',damage:40,desc:'召唤木人重拳攻击，获得1点奥义点',buff:{defUp:6,dur:2}},
+      {name:'仙法·真数千手',icon:'👐',damage:44,desc:'仙术查克拉的千手攻击，获得1点奥义点'},
+      {name:'顶上化佛',icon:'🙏',damage:98,ult:true,desc:'【奥义】真数千手的顶上化佛，消耗4点奥义点'}
+    ]
+  },
+  tobirama_edo:{
+    id:'tobirama_edo',name:'秽土扉间',title:'二代目火影 · 水遁宗师',avatar:'💧',
+    stats:{hp:125,atk:22,def:12,spd:19,crit:15,critDmg:160},
+    skills:[
+      {name:'水遁·水龙弹',icon:'🐉',damage:34,desc:'召唤水龙冲击敌人，获得1点奥义点'},
+      {name:'飞雷神之术',icon:'⚡',damage:30,desc:'飞雷神瞬移斩击，获得1点奥义点',buff:{spdUp:6,dur:2}},
+      {name:'水遁·水断波',icon:'🌊',damage:40,desc:'高压水柱切割攻击，获得1点奥义点'},
+      {name:'互乘起爆符',icon:'💥',damage:92,ult:true,desc:'【奥义】无限起爆符的连环爆炸，消耗4点奥义点'}
+    ]
+  },
+  hiruzen_edo:{
+    id:'hiruzen_edo',name:'秽土日斩',title:'三代目火影 · 忍者教授',avatar:'🐒',
+    stats:{hp:120,atk:21,def:13,spd:13,crit:12,critDmg:155},
+    skills:[
+      {name:'火遁·火龙炎弹',icon:'🔥',damage:36,desc:'三条火龙的炎弹攻击，获得1点奥义点'},
+      {name:'土遁·土龙弹',icon:'🪨',damage:32,desc:'土龙弹+泥弹攻击，获得1点奥义点',buff:{defUp:5,dur:2}},
+      {name:'风遁·大突破',icon:'🌪️',damage:34,desc:'狂风冲击敌人，获得1点奥义点'},
+      {name:'五遁大连弹',icon:'🌟',damage:93,ult:true,desc:'【奥义】五种查克拉性质同时释放，消耗4点奥义点'}
+    ]
+  },
+  guy_death:{
+    id:'guy_death',name:'死门凯',title:'八门遁甲 · 夜凯',avatar:'🦵',
+    stats:{hp:105,atk:30,def:8,spd:25,crit:22,critDmg:180},
+    skills:[
+      {name:'朝孔雀',icon:'🦚',damage:34,desc:'高速连击的火焰拳，获得1点奥义点'},
+      {name:'昼虎',icon:'🐯',damage:42,desc:'七门的空气虎形攻击，自损5血，获得1点奥义点',selfDmg:5},
+      {name:'夕象',icon:'💨',damage:46,desc:'八门的五段高速连击，自损8血，获得1点奥义点',selfDmg:8},
+      {name:'夜凯',icon:'🦅',damage:115,ult:true,selfDmg:25,desc:'【奥义】八门全开的红色蒸汽龙，自损25血，消耗4点奥义点'}
+    ]
+  },
+  minato_edo:{
+    id:'minato_edo',name:'秽土水门',title:'四代目火影 · 黄色闪光',avatar:'⚡',
+    stats:{hp:118,atk:22,def:11,spd:22,crit:16,critDmg:165},
+    skills:[
+      {name:'飞雷神·螺旋丸',icon:'🌀',damage:36,desc:'飞雷神瞬移+螺旋丸，获得1点奥义点'},
+      {name:'飞雷神二段',icon:'⚡',damage:32,desc:'标记后二段瞬移斩击，获得1点奥义点',buff:{spdUp:8,dur:2}},
+      {name:'仙法·螺旋丸',icon:'🌟',damage:42,desc:'仙人模式的螺旋丸，获得1点奥义点'},
+      {name:'飞雷神·螺旋连丸',icon:'💫',damage:94,ult:true,desc:'【奥义】飞雷神标记后的双螺旋丸连打，消耗4点奥义点'}
+    ]
+  },
+  minato_youth:{
+    id:'minato_youth',name:'青年水门',title:'上忍 · 黄色闪光',avatar:'✨',
+    stats:{hp:112,atk:21,def:10,spd:23,crit:17,critDmg:165},
+    skills:[
+      {name:'螺旋丸',icon:'🌀',damage:34,desc:'自创的螺旋丸攻击，获得1点奥义点'},
+      {name:'飞雷神之术',icon:'⚡',damage:30,desc:'飞雷神标记瞬移斩击，获得1点奥义点',buff:{spdUp:7,dur:2}},
+      {name:'飞雷神二段',icon:'💫',damage:38,desc:'二段飞雷神的连续斩击，获得1点奥义点'},
+      {name:'飞雷神·螺旋连丸',icon:'🌟',damage:90,ult:true,desc:'【奥义】飞雷神+双螺旋丸的连续攻击，消耗4点奥义点'}
+    ]
+  },
+  shisui_susano:{
+    id:'shisui_susano',name:'须佐止水',title:'宇智波止水 · 瞬身止水',avatar:'👁️',
+    stats:{hp:115,atk:23,def:11,spd:21,crit:18,critDmg:165},
+    skills:[
+      {name:'别天神',icon:'🌙',damage:30,desc:'最强幻术，40%眩晕，获得1点奥义点',debuff:{stun:40}},
+      {name:'火遁·豪火球',icon:'🔥',damage:34,desc:'巨大火球攻击，获得1点奥义点'},
+      {name:'须佐能乎·剑',icon:'⚔️',damage:42,desc:'须佐能乎的巨剑斩击，获得1点奥义点'},
+      {name:'别天神·须佐能乎',icon:'🌟',damage:96,ult:true,stun:100,desc:'【奥义】须佐能乎+别天神的究极幻术，必定眩晕，消耗4点奥义点'}
+    ]
+  },
+  itachi_edo:{
+    id:'itachi_edo',name:'秽土鼬',title:'晓 · 宇智波鼬',avatar:'👁️‍🗨️',
+    stats:{hp:120,atk:22,def:12,spd:16,crit:15,critDmg:160},
+    skills:[
+      {name:'月读',icon:'🌙',damage:32,desc:'幻术空间攻击，35%眩晕，获得1点奥义点',debuff:{stun:35}},
+      {name:'天照',icon:'⬛',damage:40,desc:'黑火焰灼烧，获得1点奥义点',debuff:{burn:10,dur:2}},
+      {name:'须佐能乎·十拳剑',icon:'⚔️',damage:44,desc:'封印之剑斩击，获得1点奥义点'},
+      {name:'伊邪那美',icon:'♾️',damage:95,ult:true,stun:100,desc:'【奥义】无限轮回的幻术，必定眩晕，消耗4点奥义点'}
+    ]
+  },
+  deidara:{
+    id:'deidara',name:'迪达拉',title:'晓 · 爆破艺术家',avatar:'💣',
+    stats:{hp:110,atk:24,def:9,spd:15,crit:16,critDmg:165},
+    skills:[
+      {name:'起爆粘土·C1',icon:'🕊️',damage:32,desc:'小型粘土鸟的爆破攻击，获得1点奥义点'},
+      {name:'起爆粘土·C2',icon:'🐉',damage:38,desc:'大型粘土龙的爆破，获得1点奥义点'},
+      {name:'起爆粘土·C3',icon:'💣',damage:44,desc:'巨型粘土炸弹，获得1点奥义点'},
+      {name:'自爆·C0',icon:'💥',damage:105,ult:true,selfDmg:30,desc:'【奥义】全身化作终极炸弹，自损30血，消耗4点奥义点'}
+    ]
+  },
+  hidan:{
+    id:'hidan',name:'飞段',title:'晓 · 邪神教徒',avatar:'🔪',
+    stats:{hp:140,atk:20,def:10,spd:12,crit:12,critDmg:150},
+    skills:[
+      {name:'三镰·血镰',icon:'🔪',damage:34,desc:'三重镰刀的血腥斩击，获得1点奥义点'},
+      {name:'死司凭血',icon:'☠️',damage:40,desc:'诅咒仪式的伤害，自损5血，获得1点奥义点',selfDmg:5},
+      {name:'不死之身',icon:'💀',damage:20,desc:'不死之身的反击，恢复20血，获得1点奥义点',heal:20},
+      {name:'诅咒仪式',icon:'🩸',damage:90,ult:true,lifesteal:40,desc:'【奥义】邪神的诅咒仪式，吸血40%，消耗4点奥义点'}
+    ]
+  },
+  kakashi_susano:{
+    id:'kakashi_susano',name:'须佐卡卡西',title:'六代目火影 · 须佐能乎',avatar:'📖',
+    stats:{hp:118,atk:24,def:12,spd:18,crit:16,critDmg:165},
+    skills:[
+      {name:'神威雷切',icon:'⚡',damage:40,desc:'神威空间的雷切，获得1点奥义点'},
+      {name:'须佐能乎·神威',icon:'🌀',damage:36,desc:'须佐能乎释放神威，30%眩晕，获得1点奥义点',debuff:{stun:30}},
+      {name:'雷切·双穿光',icon:'💫',damage:42,desc:'双雷切贯穿攻击，获得1点奥义点'},
+      {name:'须佐能乎·神威手里剑',icon:'🌟',damage:96,ult:true,desc:'【奥义】须佐能乎投掷的神威手里剑，消耗4点奥义点'}
+    ]
+  },
+  madara_kamui:{
+    id:'madara_kamui',name:'神威斑',title:'宇智波斑 · 神威',avatar:'👹',
+    stats:{hp:138,atk:25,def:14,spd:15,crit:15,critDmg:160},
+    skills:[
+      {name:'须佐能乎·斩',icon:'⚔️',damage:40,desc:'完全体须佐的斩击，获得1点奥义点'},
+      {name:'神威',icon:'🌀',damage:36,desc:'神威空间扭曲攻击，30%眩晕，获得1点奥义点',debuff:{stun:30}},
+      {name:'火遁·豪火灭失',icon:'🔥',damage:38,desc:'毁灭性的大范围火焰，获得1点奥义点'},
+      {name:'威装·须佐能乎',icon:'🌟',damage:98,ult:true,desc:'【奥义】九尾+须佐能乎的威装形态，消耗4点奥义点'}
+    ]
+  },
+  madara_edo:{
+    id:'madara_edo',name:'秽土斑',title:'宇智波斑 · 秽土转生',avatar:'👹',
+    stats:{hp:142,atk:24,def:15,spd:13,crit:14,critDmg:160},
+    skills:[
+      {name:'须佐能乎·斩',icon:'⚔️',damage:38,desc:'须佐能乎的巨剑斩击，获得1点奥义点'},
+      {name:'火遁·豪火灭失',icon:'🔥',damage:36,desc:'大范围毁灭火焰，获得1点奥义点'},
+      {name:'轮回眼·吸术封尽',icon:'🌀',damage:32,desc:'吸收查克拉并造成伤害，获得1点奥义点',chakraDrain:15},
+      {name:'天碍震星',icon:'☄️',damage:100,ult:true,desc:'【奥义】召唤陨石毁灭战场，消耗4点奥义点'}
+    ]
+  },
+  madara_edo_release:{
+    id:'madara_edo_release',name:'秽土解斑',title:'宇智波斑 · 秽土解',avatar:'🌑',
+    stats:{hp:148,atk:26,def:16,spd:14,crit:16,critDmg:165},
+    skills:[
+      {name:'须佐能乎·完全体',icon:'⚔️',damage:42,desc:'完全体须佐能乎的斩击，获得1点奥义点',buff:{atkUp:5,dur:2}},
+      {name:'轮墓·边狱',icon:'👥',damage:40,desc:'轮墓分身的无形攻击，获得1点奥义点'},
+      {name:'火遁·豪火灭失',icon:'🔥',damage:38,desc:'毁灭级火焰攻击，获得1点奥义点'},
+      {name:'无限月读',icon:'🌕',damage:102,ult:true,stun:100,desc:'【奥义】轮回眼的无限月读，必定眩晕，消耗4点奥义点'}
+    ]
+  },
+  nagato_youth:{
+    id:'nagato_youth',name:'青年长门',title:'漩涡长门 · 轮回眼',avatar:'🔮',
+    stats:{hp:118,atk:22,def:11,spd:13,crit:13,critDmg:155},
+    skills:[
+      {name:'神罗天征',icon:'💫',damage:34,desc:'轮回眼的斥力攻击，获得1点奥义点'},
+      {name:'万象天引',icon:'🧲',damage:30,desc:'轮回眼的引力拉扯，获得1点奥义点'},
+      {name:'地爆天星',icon:'🌑',damage:38,desc:'引力球封印，35%眩晕，获得1点奥义点',debuff:{stun:35}},
+      {name:'外道魔像',icon:'🗿',damage:92,ult:true,desc:'【奥义】召唤外道魔像的龙形查克拉，消耗4点奥义点'}
+    ]
+  },
+  nagato_edo:{
+    id:'nagato_edo',name:'秽土长门',title:'佩恩 · 秽土转生',avatar:'👁️',
+    stats:{hp:125,atk:23,def:12,spd:12,crit:14,critDmg:160},
+    skills:[
+      {name:'神罗天征',icon:'💫',damage:36,desc:'强力斥力弹开攻击，获得1点奥义点'},
+      {name:'地爆天星',icon:'🌑',damage:40,desc:'地爆天星的引力攻击，40%眩晕，获得1点奥义点',debuff:{stun:40}},
+      {name:'吸术封尽',icon:'🌀',damage:34,desc:'吸收查克拉并攻击，获得1点奥义点',chakraDrain:18},
+      {name:'轮回天生·爆星',icon:'🌟',damage:96,ult:true,desc:'【奥义】轮回天生+地爆天星的究极攻击，消耗4点奥义点'}
+    ]
+  },
+  hashirama_xiake:{
+    id:'hashirama_xiake',name:'侠隐柱间',title:'侠隐江湖 · 千手柱间',avatar:'🗡️',
+    stats:{hp:135,atk:23,def:14,spd:15,crit:13,critDmg:155},
+    skills:[
+      {name:'木遁·剑舞',icon:'🗡️',damage:36,desc:'木剑的连续斩击，获得1点奥义点'},
+      {name:'木遁·藤蔓',icon:'🌿',damage:32,desc:'藤蔓缠绕攻击，获得1点奥义点',debuff:{stun:25}},
+      {name:'仙法·木龙',icon:'🐉',damage:42,desc:'仙术木龙的冲击，获得1点奥义点'},
+      {name:'侠隐·真数千手',icon:'🙏',damage:96,ult:true,desc:'【奥义】侠隐风格的真数千手，消耗4点奥义点'}
+    ]
+  },
+  obito_drifter:{
+    id:'obito_drifter',name:'漂泊带土',title:'漂泊武士 · 宇智波带土',avatar:'⚔️',
+    stats:{hp:122,atk:23,def:11,spd:18,crit:16,critDmg:160},
+    skills:[
+      {name:'太刀·斩',icon:'⚔️',damage:34,desc:'太刀的迅捷斩击，获得1点奥义点'},
+      {name:'神威·瞬',icon:'🌀',damage:32,desc:'神威瞬移的太刀斩，获得1点奥义点',buff:{spdUp:6,dur:2}},
+      {name:'火遁·炎',icon:'🔥',damage:38,desc:'火焰附魔的太刀斩击，获得1点奥义点'},
+      {name:'漂泊·神威斩',icon:'🌟',damage:94,ult:true,desc:'【奥义】漂泊武士的究极神威斩，消耗4点奥义点'}
+    ]
+  },
+  hashirama_founder:{
+    id:'hashirama_founder',name:'创立柱间',title:'木叶创立 · 初代目',avatar:'🌲',
+    stats:{hp:145,atk:23,def:15,spd:12,crit:11,critDmg:150},
+    skills:[
+      {name:'木遁·木龙',icon:'🐉',damage:36,desc:'木龙的缠绕攻击，获得1点奥义点'},
+      {name:'木遁·木人',icon:'🗿',damage:40,desc:'木人的重拳攻击，获得1点奥义点',buff:{defUp:6,dur:2}},
+      {name:'仙法·真数千手',icon:'👐',damage:44,desc:'真数千手的连续攻击，获得1点奥义点'},
+      {name:'顶上化佛',icon:'🙏',damage:100,ult:true,desc:'【奥义】真数千手的顶上化佛，消耗4点奥义点'}
+    ]
+  },
+  madara_founder:{
+    id:'madara_founder',name:'创立斑',title:'木叶创立 · 宇智波斑',avatar:'🔥',
+    stats:{hp:140,atk:25,def:14,spd:14,crit:15,critDmg:160},
+    skills:[
+      {name:'须佐能乎·斩',icon:'⚔️',damage:40,desc:'须佐能乎的巨剑斩击，获得1点奥义点'},
+      {name:'火遁·豪火灭失',icon:'🔥',damage:38,desc:'毁灭级火焰攻击，获得1点奥义点'},
+      {name:'写轮眼·幻术',icon:'👁️',damage:30,desc:'写轮眼幻术攻击，30%眩晕，获得1点奥义点',debuff:{stun:30}},
+      {name:'威装·须佐能乎',icon:'🌟',damage:98,ult:true,desc:'【奥义】九尾+须佐能乎的威装形态，消耗4点奥义点'}
+    ]
+  }
+};
+const NINJA_IDS = Object.keys(NINJAS);
+
+const SCENES = ['scene-konoha','scene-valley','scene-akatsuki','scene-sand','scene-rain'];
+
+// ===== 剧情关卡 =====
+const STORY_STAGES = [
+  {id:1, name:'波之国任务', desc:'踏上忍者之路的第一个任务', enemy:['kakashi','sasuke','sakura'], scene:'scene-konoha', reward:'解锁下一关'},
+  {id:2, name:'中忍考试', desc:'砂隐村的恐怖挑战者', enemy:['gaara','rocklee','sasuke'], scene:'scene-sand', reward:'解锁下一关'},
+  {id:3, name:'终结谷之战', desc:'与挚友的宿命对决', enemy:['sasuke','orochimaru','itachi'], scene:'scene-valley', reward:'解锁下一关'},
+  {id:4, name:'晓组织来袭', desc:'神的力量降临木叶', enemy:['pain','itachi','orochimaru'], scene:'scene-rain', reward:'解锁下一关'},
+  {id:5, name:'第四次忍界大战', desc:'面对宇智波之神的终极挑战', enemy:['madara','pain','itachi'], scene:'scene-akatsuki', reward:'通关！成为火影！'}
+];
+
+// 角色主题色映射
+const NINJA_COLORS = {
+  naruto:'#ff7f00',sasuke:'#1a237e',sakura:'#e91e63',kakashi:'#607d8b',
+  itachi:'#c62828',jiraiya:'#ff8f00',tsunade:'#f06292',orochimaru:'#7cb342',
+  pain:'#7e57c2',madara:'#b71c1c',rocklee:'#26a69a',gaara:'#d84315',
+  obito_war:'#4a148c',hashirama_edo:'#2e7d32',tobirama_edo:'#0277bd',
+  hiruzen_edo:'#795548',guy_death:'#d32f2f',minato_edo:'#ffb300',
+  minato_youth:'#ffca28',shisui_susano:'#5c6bc0',itachi_edo:'#8e24aa',
+  deidara:'#f9a825',hidan:'#546e7a',kakashi_susano:'#455a64',madara_kamui:'#6a1b9a',
+  madara_edo:'#880e4f',madara_edo_release:'#311b92',nagato_youth:'#7b1fa2',
+  nagato_edo:'#4a148c',hashirama_xiake:'#00695c',obito_drifter:'#37474f',
+  hashirama_founder:'#1b5e20',madara_founder:'#bf360c'
+};
+// ===== 战斗者类 =====
+class Fighter {
+  constructor(data, isEnemy=false){
+    this.id = data.id;
+    this.name = data.name;
+    this.avatar = data.avatar;
+    this.isEnemy = isEnemy;
+    const s = data.stats;
+    this.maxHp = 100; this.hp = 100;
+    this.atk = Math.floor(s.atk*0.65); this.def = Math.floor(s.def*0.8); this.spd = s.spd;
+    this.critRate = s.crit; this.critDmg = s.critDmg;
+    this.skills = data.skills.map(sk=>{ const ns={...sk,cd:0}; if(ns.damage) ns.damage=Math.floor(ns.damage*0.65); if(ns.heal) ns.heal=Math.floor(ns.heal*0.7); if(ns.selfDmg) ns.selfDmg=Math.floor(ns.selfDmg*0.6); return ns; });
+    this.ultPoints = 0;
+    this.buffs = [];
+    this.debuffs = [];
+    this.shield = 0;
+    this.isDefending = false;
+    this.themeColor = data.color || NINJA_COLORS[this.id] || "#ff9800";
+  }
+  get totalAtk(){ let a=this.atk; this.buffs.forEach(b=>{if(b.type==='atkUp')a+=b.value}); return a; }
+  get totalDef(){ let d=this.def; this.buffs.forEach(b=>{if(b.type==='defUp')d+=b.value}); return d; }
+  get isStunned(){ return this.debuffs.some(d=>d.type==='stun'); }
+  get ultReady(){ return this.ultPoints >= 4; }
+
+  takeDamage(dmg){
+    if(this.isDefending) dmg = Math.floor(dmg*0.5);
+    if(this.shield>0){ const a=Math.min(this.shield,dmg); this.shield-=a; dmg-=a; if(a>0) addLog(`🛡️ 护盾吸收${a}点伤害`,'system'); }
+    this.hp = Math.max(0,this.hp-dmg);
+    return dmg;
+  }
+  heal(amt){ const b=this.hp; this.hp=Math.min(this.maxHp,this.hp+amt); return this.hp-b; }
+  addUltPoint(){ if(this.ultPoints<4){ this.ultPoints++; return true; } return false; }
+  useUlt(){ this.ultPoints = 0; }
+  addBuff(type,value,dur){ this.buffs=this.buffs.filter(b=>b.type!==type); this.buffs.push({type,value,dur}); }
+  addDebuff(type,value,dur){ this.debuffs=this.debuffs.filter(d=>d.type!==type); this.debuffs.push({type,value,dur}); }
+  tickStatus(){
+    const msgs=[];
+    this.debuffs.forEach(d=>{
+      if(d.type==='poison'||d.type==='burn'){ this.hp=Math.max(0,this.hp-d.value); msgs.push(`☠️ ${this.name}受到${d.type==='poison'?'中毒':'灼烧'}${d.value}点伤害`); }
+    });
+    this.buffs=this.buffs.filter(b=>{b.dur--;return b.dur>0});
+    this.debuffs=this.debuffs.filter(d=>{d.dur--;return d.dur>0});
+    this.isDefending=false;
+    return msgs;
+  }
+  reduceCd(){ this.skills.forEach(sk=>{if(sk.cd>0)sk.cd--}); }
+  isAlive(){ return this.hp>0; }
+}
+
+// ===== 游戏状态 =====
+const game = {
+  mode:null,
+  teamSize:3,
+  playerTeam:[],
+  enemyTeam:[],
+  pIdx:0,
+  eIdx:0,
+  player:null,
+  enemy:null,
+  isPlayerTurn:true,
+  busy:false,
+  ended:false,
+  pickedIds:[],
+  stats:{dmgDealt:0,dmgTaken:0,turns:0,crits:0,kos:0},
+  // 剧情模式
+  storyStageIdx:0,
+  storyEnemyIds:[],
+  storyScene:'',
+  storyProgress: JSON.parse(localStorage.getItem('naruto_story_progress')||'[]')
+};
+
+// ===== 界面切换 =====
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showMainMenu(){ SFX.click(); showScreen('mainMenu'); }
+function showModeSelect(){ SFX.click(); showScreen('modeSelect'); }
+function showSettings(){ SFX.click(); showScreen('settingsScreen'); }
+
+function startMode(mode){
+  SFX.select();
+  game.mode = mode;
+  game.teamSize = mode==='1v1' ? 1 : 3;
+  showCharSelect();
+}
+
+// ===== 剧情模式 =====
+function showStoryMode(){
+  SFX.click();
+  const list = document.getElementById('storyList');
+  list.innerHTML = '';
+  STORY_STAGES.forEach((stage,idx)=>{
+    const completed = game.storyProgress.includes(stage.id);
+    const unlocked = idx===0 || game.storyProgress.includes(STORY_STAGES[idx-1].id);
+    const div = document.createElement('div');
+    div.className = 'story-stage'+(unlocked?'':' locked')+(completed?' completed':'');
+    const enemyNames = stage.enemy.map(id=>`<span>${NINJAS[id].avatar}${NINJAS[id].name}</span>`).join('');
+    div.innerHTML = `
+      <div class="stage-num">${stage.id}</div>
+      <div class="stage-info">
+        <div class="stage-name">${stage.name}</div>
+        <div class="stage-desc">${stage.desc}</div>
+        <div class="stage-enemy">敌方：${enemyNames}</div>
+        <div class="stage-reward">🎁 ${stage.reward}</div>
+      </div>
+      <div class="stage-status">${completed?'✅':(unlocked?'⚔️':'🔒')}</div>
+    `;
+    if(unlocked) div.onclick = ()=>startStoryStage(idx);
+    list.appendChild(div);
+  });
+  showScreen('storyMode');
+}
+
+function startStoryStage(idx){
+  SFX.select();
+  const stage = STORY_STAGES[idx];
+  game.mode = 'story';
+  game.teamSize = 3;
+  game.storyStageIdx = idx;
+  game.storyEnemyIds = [...stage.enemy];
+  game.storyScene = stage.scene;
+  showCharSelect();
+}
+
+// ===== 选人界面 =====
+function showCharSelect(){
+  game.pickedIds = [];
+  const title = document.getElementById('selectTitle');
+  const info = document.getElementById('selectInfo');
+  if(game.mode==='story'){
+    const stage = STORY_STAGES[game.storyStageIdx];
+    title.textContent = `剧情：${stage.name}`;
+    info.textContent = `${stage.desc} | 选择 ${game.teamSize} 名忍者出战`;
+  } else if(game.teamSize===1){
+    title.textContent='选择你的忍者';
+    info.textContent='选择 1 名忍者出战';
+  } else {
+    title.textContent='组建决斗小队';
+    info.textContent=`选择 ${game.teamSize} 名忍者组成小队（点击添加，点击✕移除）`;
+  }
+
+  renderTeamSlots();
+  renderCharGrid();
+  document.getElementById('confirmBtn').disabled = true;
+  showScreen('charSelect');
+}
+
+function renderTeamSlots(){
+  const c = document.getElementById('teamSlots');
+  c.innerHTML = '';
+  for(let i=0;i<game.teamSize;i++){
+    const id = game.pickedIds[i];
+    const slot = document.createElement('div');
+    slot.className = 'team-slot'+(id?' filled':'');
+    if(id){
+      const n = NINJAS[id];
+      slot.innerHTML = `<span class="slot-num">${i+1}</span><span class="slot-avatar">${n.avatar}</span><span style="font-size:.7em;margin-top:2px">${n.name}</span><span class="slot-remove" onclick="removeFromTeam(${i})">✕</span>`;
+    } else {
+      slot.innerHTML = `<span class="slot-num">${i+1}</span><span style="font-size:1.8em">?</span><span>空位</span>`;
+    }
+    c.appendChild(slot);
+  }
+}
+
+function renderCharGrid(){
+  const g = document.getElementById('charGrid');
+  g.innerHTML = '';
+  NINJA_IDS.forEach(id=>{
+    const n = NINJAS[id];
+    const picked = game.pickedIds.includes(id);
+    const card = document.createElement('div');
+    card.className = 'char-card'+(picked?' picked':'');
+    card.innerHTML = `
+      <div class="char-avatar">${n.avatar}</div>
+      <div class="char-name">${n.name}</div>
+      <div class="char-title">${n.title}</div>
+      <div class="char-stats"><span>❤️${n.stats.hp}</span><span>⚔️${n.stats.atk}</span><span>🛡️${n.stats.def}</span><span>💨${n.stats.spd}</span></div>
+    `;
+    card.onclick = ()=>addToTeam(id);
+    g.appendChild(card);
+  });
+}
+
+function addToTeam(id){
+  if(game.pickedIds.includes(id)) return;
+  if(game.pickedIds.length >= game.teamSize) return;
+  SFX.select();
+  game.pickedIds.push(id);
+  renderTeamSlots();
+  renderCharGrid();
+  document.getElementById('confirmBtn').disabled = game.pickedIds.length < game.teamSize;
+}
+
+function removeFromTeam(idx){
+  SFX.click();
+  game.pickedIds.splice(idx,1);
+  renderTeamSlots();
+  renderCharGrid();
+  document.getElementById('confirmBtn').disabled = game.pickedIds.length < game.teamSize;
+}
+
+function confirmTeam(){
+  if(game.pickedIds.length < game.teamSize) return;
+  SFX.click();
+  initBattle();
+}
+
+// ===== 战斗初始化 =====
+function initBattle(){
+  // 创建玩家队伍
+  game.playerTeam = game.pickedIds.map(id=>new Fighter(NINJAS[id],false));
+  // 创建敌人队伍
+  let enemyIds;
+  if(game.mode==='story'){
+    // 剧情模式：固定敌人
+    enemyIds = [...game.storyEnemyIds];
+  } else {
+    // 其他模式：随机选
+    enemyIds = [];
+    const pool = NINJA_IDS.filter(id=>!game.pickedIds.includes(id));
+    for(let i=0;i<game.teamSize;i++){
+      const idx = Math.floor(Math.random()*pool.length);
+      enemyIds.push(pool.splice(idx,1)[0]);
+    }
+  }
+  game.enemyTeam = enemyIds.map(id=>new Fighter(NINJAS[id],true));
+
+  game.pIdx = 0; game.eIdx = 0;
+  game.player = game.playerTeam[0];
+  game.enemy = game.enemyTeam[0];
+  game.isPlayerTurn = true;
+  game.busy = false;
+  game.ended = false;
+  game.stats = {dmgDealt:0,dmgTaken:0,turns:0,crits:0,kos:0};
+
+  // 场景
+  const arena = document.getElementById('battleArena');
+  let scene;
+  if(game.mode==='story'){
+    scene = game.storyScene;
+  } else {
+    scene = SCENES[Math.floor(Math.random()*SCENES.length)];
+  }
+  arena.className = 'battle-arena ' + scene;
+
+  document.getElementById('battleLog').innerHTML = '';
+  if(game.mode==='story'){
+    const stage = STORY_STAGES[game.storyStageIdx];
+    addLog(`📜 剧情关卡：${stage.name}`,'system');
+  }
+  addLog(`⚔️ 决斗开始！${game.player.name} VS ${game.enemy.name}`,'system');
+
+  updateFighterDisplay();
+  renderTeamBars();
+  renderSkillBar();
+  updateUltPoints();
+  showScreen('battleScreen');
+  initAudio();
+
+  // 先手判定
+  if(game.enemy.spd > game.player.spd && Math.random()<0.5){
+    addLog(`💨 ${game.enemy.name}速度更快，先手！`,'system');
+    game.isPlayerTurn = false;
+    renderSkillBar();
+    setTimeout(()=>enemyTurn(), delay(800));
+  }
+}
+
+function updateFighterDisplay(){
+  const p=game.player, e=game.enemy;
+  document.getElementById('playerAvatar').textContent = p.avatar;
+  document.getElementById('playerName').textContent = p.name;
+  document.getElementById('enemyAvatar').textContent = e.avatar;
+  document.getElementById('enemyName').textContent = e.name;
+  document.getElementById('playerFighter').style.setProperty('--theme-color', p.themeColor);
+  document.getElementById('enemyFighter').style.setProperty('--theme-color', e.themeColor);
+
+  document.getElementById('playerHpFill').style.width = (p.hp/p.maxHp*100)+'%';
+  document.getElementById('playerHpText').textContent = `${p.hp}/${p.maxHp}`;
+  document.getElementById('enemyHpFill').style.width = (e.hp/e.maxHp*100)+'%';
+  document.getElementById('enemyHpText').textContent = `${e.hp}/${e.maxHp}`;
+
+  document.getElementById('playerFighter').classList.toggle('dead',!p.isAlive());
+  document.getElementById('enemyFighter').classList.toggle('dead',!e.isAlive());
+
+  renderStatusIcons('player',p);
+  renderStatusIcons('enemy',e);
+}
+
+function renderStatusIcons(side,f){
+  const c = document.getElementById(side+'Status');
+  c.innerHTML = '';
+  f.buffs.forEach(b=>{ const i=document.createElement('span'); i.className='status-icon'; i.textContent=b.type==='atkUp'?'⚔️':b.type==='defUp'?'🛡️':'💨'; i.title=b.type+' +'+b.value; c.appendChild(i); });
+  f.debuffs.forEach(d=>{ const i=document.createElement('span'); i.className='status-icon'; i.textContent=d.type==='poison'?'☠️':d.type==='burn'?'🔥':'💫'; i.title=d.type; c.appendChild(i); });
+  if(f.shield>0){ const i=document.createElement('span'); i.className='status-icon'; i.textContent='🔰'; i.title='护盾'+f.shield; c.appendChild(i); }
+}
+
+function renderTeamBars(){
+  const pb = document.getElementById('playerTeamBar');
+  const eb = document.getElementById('enemyTeamBar');
+  pb.innerHTML=''; eb.innerHTML='';
+  game.playerTeam.forEach((n,i)=>{
+    const a=document.createElement('div'); a.className='team-avatar'+(i===game.pIdx?' active':'')+(n.isAlive()?'':' dead'); a.textContent=n.avatar; a.title=n.name+(n.isAlive()?` (${n.hp}/${n.maxHp})`:' 已阵亡'); pb.appendChild(a);
+  });
+  game.enemyTeam.forEach((n,i)=>{
+    const a=document.createElement('div'); a.className='team-avatar'+(i===game.eIdx?' active':'')+(n.isAlive()?'':' dead'); a.textContent=n.avatar; a.title=n.name+(n.isAlive()?` (${n.hp}/${n.maxHp})`:' 已阵亡'); eb.appendChild(a);
+  });
+}
+
+function renderSkillBar(){
+  const bar = document.getElementById('skillBar');
+  bar.innerHTML = '';
+  const p = game.player;
+  const disabled = !game.isPlayerTurn || game.busy || game.ended || p.isStunned;
+
+  // 普攻
+  const basicBtn = createSkillBtn('👊','普攻',0,'basic',disabled,false);
+  basicBtn.onclick = ()=>doBasicAttack();
+  bar.appendChild(basicBtn);
+
+  // 3个小技能
+  p.skills.forEach((sk,i)=>{
+    if(sk.ult) return;
+    const btn = createSkillBtn(sk.icon,sk.name,i+1,'',disabled || sk.cd>0,false);
+    if(sk.cd>0){ const cd=document.createElement('div'); cd.className='cd-overlay'; cd.textContent=sk.cd; btn.appendChild(cd); }
+    btn.onclick = ()=>useSkill(i);
+    bar.appendChild(btn);
+  });
+
+  // 奥义
+  const ultSk = p.skills.find(sk=>sk.ult);
+  const ultIdx = p.skills.indexOf(ultSk);
+  const ultBtn = createSkillBtn(ultSk.icon,'奥义',4,'ultimate',disabled || !p.ultReady,p.ultReady);
+  ultBtn.onclick = ()=>useSkill(ultIdx);
+  bar.appendChild(ultBtn);
+}
+
+function createSkillBtn(icon,name,key,extraClass,disabled,ready){
+  const b=document.createElement('button');
+  b.className='skill-btn '+extraClass+(ready?' ready':'');
+  b.disabled=disabled;
+  b.innerHTML=`<span class="skill-icon">${icon}</span><span class="skill-key">${key}</span>`;
+  b.title=name;
+  return b;
+}
+
+function updateUltPoints(){
+  const pts = document.querySelectorAll('#ultPoints .ult-point');
+  pts.forEach((p,i)=>{
+    p.classList.toggle('filled', i<game.player.ultPoints);
+    p.classList.toggle('full', game.player.ultPoints>=4);
+  });
+}
+
+// ===== 伤害计算 =====
+function calcDamage(attacker,defender,base){
+  let dmg = base + Math.floor(attacker.totalAtk*0.5);
+  dmg = Math.max(1, dmg - Math.floor(defender.totalDef*0.4));
+  dmg = Math.floor(dmg*(0.85+Math.random()*0.3));
+  const crit = Math.random()*100 < attacker.critRate;
+  if(crit){ dmg=Math.floor(dmg*attacker.critDmg/100); game.stats.crits++; }
+  return {dmg,crit};
+}
+
+// ===== 飘字 =====
+function showDmg(side,text,type='dmg'){
+  const layer=document.getElementById('damageLayer');
+  const f=document.getElementById(side+'Fighter');
+  const r=f.getBoundingClientRect();
+  const ar=document.getElementById('battleArena').getBoundingClientRect();
+  const d=document.createElement('div');
+  d.className='dmg-text '+type;
+  d.textContent=text;
+  d.style.left=(r.left-ar.left+r.width/2-20+(Math.random()*40-20))+'px';
+  d.style.top=(r.top-ar.top+30)+'px';
+  layer.appendChild(d);
+  setTimeout(()=>d.remove(),1100);
+}
+
+function addLog(msg,type='normal'){
+  if(!SETTINGS.showLog) return;
+  const log=document.getElementById('battleLog');
+  const l=document.createElement('div');
+  l.className='log-line '+type;
+  l.textContent=msg;
+  log.appendChild(l);
+  log.scrollTop=log.scrollHeight;
+  while(log.children.length>30) log.removeChild(log.firstChild);
+}
+
+function animFighter(side,cls,dur){
+  const f=document.getElementById(side+'Fighter');
+  f.classList.add(cls);
+  setTimeout(()=>f.classList.remove(cls),dur);
+}
+
+function showTurnBanner(text,color){
+  const b=document.createElement('div');
+  b.className='turn-banner';
+  b.style.color=color;
+  b.textContent=text;
+  document.getElementById('battleArena').appendChild(b);
+  setTimeout(()=>b.remove(),1200);
+}
+
+// ===== 玩家行动 =====
+function doBasicAttack(){
+  if(!game.isPlayerTurn||game.busy||game.ended) return;
+  game.busy=true;
+  const p=game.player,e=game.enemy;
+  p.isDefending=false;
+  SFX.attack();
+  animFighter('player','attacking',350);
+  setTimeout(()=>{
+    const {dmg,crit}=calcDamage(p,e,0);
+    const actual=e.takeDamage(dmg);
+    game.stats.dmgDealt+=actual;
+    animFighter('enemy','hurt',400);
+    if(crit){ SFX.crit(); showDmg('enemy',`暴击 -${actual}`,'crit'); addLog(`💥 暴击！${p.name}普攻造成${actual}伤害`,'crit'); }
+    else{ SFX.hit(); showDmg('enemy',`-${actual}`,'dmg'); addLog(`⚔️ ${p.name}普攻造成${actual}伤害`,'player'); }
+    // 普攻最后一击有几率获得奥义点（手游机制简化：30%概率）
+    if(Math.random()<0.3 && p.addUltPoint()){ SFX.point(); showDmg('player','+1奥义点','point'); updateUltPoints(); }
+    updateFighterDisplay();
+    if(checkKO()) return;
+    endPlayerTurn();
+  },delay(300));
+}
+
+function useSkill(idx){
+  if(!game.isPlayerTurn||game.busy||game.ended) return;
+  const p=game.player, sk=p.skills[idx];
+  if(sk.cd>0) return;
+  if(sk.ult && !p.ultReady) return;
+
+  game.busy=true;
+  p.isDefending=false;
+
+  if(sk.ult){
+    p.useUlt();
+    updateUltPoints();
+    executeUltimate(p,game.enemy,sk,'player');
+  } else {
+    // 获得奥义点
+    if(p.addUltPoint()){ SFX.point(); showDmg('player','+1奥义点','point'); updateUltPoints(); }
+    if(sk.cd>0) sk.cd = sk.cd; // no base cd for small skills in this design
+    executeSkill(p,game.enemy,sk,'player');
+  }
+}
+
+function executeSkill(caster,target,sk,side){
+  SFX.skill();
+  animFighter(side,'attacking',400);
+  addLog(`${sk.icon} ${caster.name}使用【${sk.name}】`, side==='player'?'player':'enemy');
+
+  setTimeout(()=>{
+    const targetSide = side==='player'?'enemy':'player';
+
+    if(sk.heal){
+      const h=caster.heal(sk.heal);
+      SFX.heal();
+      animFighter(side,'healing',800);
+      showDmg(side,`+${h}`,'heal');
+      addLog(`💚 恢复${h}点生命`, side==='player'?'player':'enemy');
+    } else {
+      const {dmg,crit}=calcDamage(caster,target,sk.damage);
+      let actual=target.takeDamage(dmg);
+      if(side==='player') game.stats.dmgDealt+=actual; else game.stats.dmgTaken+=actual;
+
+      // 吸血
+      if(sk.lifesteal){ const h=caster.heal(Math.floor(actual*sk.lifesteal/100)); if(h>0){ showDmg(side,`+${h}`,'heal'); addLog(`🩸 吸取${h}生命`); } }
+      // 查克拉吸取
+      if(sk.chakraDrain){ const dr=Math.min(target.chakra||0,sk.chakraDrain); addLog(`🔮 吸取查克拉`); }
+      // 自损
+      if(sk.selfDmg){ caster.hp=Math.max(1,caster.hp-sk.selfDmg); showDmg(side,`-${sk.selfDmg}`,'dmg'); addLog(`💔 反噬${sk.selfDmg}伤害`); }
+
+      animFighter(targetSide,'hurt',400);
+      if(crit){ SFX.crit(); showDmg(targetSide,`暴击 -${actual}`,'crit'); addLog(`💥 暴击！造成${actual}伤害`,'crit'); }
+      else{ SFX.hit(); showDmg(targetSide,`-${actual}`,'dmg'); addLog(`造成${actual}伤害`); }
+
+      // debuff
+      if(sk.debuff){
+        if(sk.debuff.burn){ target.addDebuff('burn',sk.debuff.burn,sk.debuff.dur||2); addLog(`🔥 ${target.name}被灼烧`); }
+        if(sk.debuff.poison){ target.addDebuff('poison',sk.debuff.poison,sk.debuff.dur||3); addLog(`☠️ ${target.name}中毒`); }
+        if(sk.debuff.stun && Math.random()*100<sk.debuff.stun){ target.addDebuff('stun',0,1); addLog(`💫 ${target.name}被眩晕！`,'system'); }
+      }
+    }
+
+    // buff
+    if(sk.buff){
+      if(sk.buff.atkUp){ caster.addBuff('atkUp',sk.buff.atkUp,sk.buff.dur||2); addLog(`⚔️ 攻击力提升`); }
+      if(sk.buff.defUp){ caster.addBuff('defUp',sk.buff.defUp,sk.buff.dur||2); addLog(`🛡️ 防御力提升`); }
+    }
+
+    updateFighterDisplay();
+    renderSkillBar();
+    if(checkKO()) return;
+    if(side==='player') endPlayerTurn(); else endEnemyTurn();
+  }, delay(380));
+}
+
+function executeUltimate(caster,target,sk,side){
+  // 奥义特效
+  const eff=document.createElement('div');
+  eff.className='ult-effect';
+  eff.innerHTML=`<div class="ult-text">${sk.icon} 奥 义</div>`;
+  document.getElementById('battleArena').appendChild(eff);
+  setTimeout(()=>eff.remove(),1500);
+
+  SFX.ult();
+  animFighter(side,'ultimate',1000);
+  addLog(`🌟 ${caster.name}发动奥义【${sk.name}】！`, side==='player'?'player':'enemy');
+
+  setTimeout(()=>{
+    const targetSide = side==='player'?'enemy':'player';
+
+    if(sk.heal){
+      const h=caster.heal(sk.heal);
+      if(sk.shield){ caster.shield+=sk.shield; addLog(`🔰 获得${sk.shield}护盾`); }
+      SFX.heal(); animFighter(side,'healing',800);
+      showDmg(side,`+${h}`,'heal');
+      addLog(`💚 恢复${h}生命`);
+    } else {
+      const {dmg,crit}=calcDamage(caster,target,sk.damage);
+      // 奥义必中且伤害更稳定
+      let actual=target.takeDamage(dmg);
+      if(side==='player') game.stats.dmgDealt+=actual; else game.stats.dmgTaken+=actual;
+
+      if(sk.lifesteal){ const h=caster.heal(Math.floor(actual*sk.lifesteal/100)); if(h>0) showDmg(side,`+${h}`,'heal'); }
+      if(sk.selfDmg){ caster.hp=Math.max(1,caster.hp-sk.selfDmg); showDmg(side,`-${sk.selfDmg}`,'dmg'); }
+      if(sk.stun && Math.random()*100<sk.stun){ target.addDebuff('stun',0,1); addLog(`💫 ${target.name}被眩晕！`,'system'); }
+
+      animFighter(targetSide,'hurt',500);
+      SFX.crit();
+      showDmg(targetSide,`奥义 -${actual}`,'crit');
+      addLog(`💥 奥义造成${actual}点伤害！`,'crit');
+    }
+
+    updateFighterDisplay();
+    renderSkillBar();
+    if(checkKO()) return;
+    if(side==='player') endPlayerTurn(); else endEnemyTurn();
+  }, delay(700));
+}
+
+// ===== 回合切换 =====
+function endPlayerTurn(){
+  game.isPlayerTurn=false;
+  renderSkillBar();
+  setTimeout(()=>enemyTurn(), delay(700));
+}
+
+function endEnemyTurn(){
+  setTimeout(()=>{
+    // 状态结算
+    const pm=game.player.tickStatus();
+    const em=game.enemy.tickStatus();
+    pm.forEach(m=>addLog(m,'system'));
+    em.forEach(m=>addLog(m,'system'));
+    // CD减少
+    game.player.reduceCd();
+    game.enemy.reduceCd();
+    game.stats.turns++;
+
+    if(checkKO()) return;
+
+    // 玩家眩晕
+    if(game.player.isStunned){
+      addLog(`💫 ${game.player.name}被眩晕，跳过回合！`,'system');
+      game.isPlayerTurn=false;
+      updateFighterDisplay(); renderSkillBar();
+      setTimeout(()=>enemyTurn(), delay(800));
+      return;
+    }
+
+    game.isPlayerTurn=true;
+    game.busy=false;
+    updateFighterDisplay();
+    renderSkillBar();
+  }, delay(600));
+}
+
+// ===== 敌人AI =====
+function enemyTurn(){
+  if(game.ended) return;
+  game.busy=true;
+  const e=game.enemy, p=game.player;
+
+  if(e.isStunned){
+    addLog(`💫 ${e.name}被眩晕，无法行动！`,'system');
+    updateFighterDisplay();
+    endEnemyTurn();
+    return;
+  }
+
+  const action = decideAI(e,p);
+
+  setTimeout(()=>{
+    if(action.type==='ult'){
+      e.useUlt();
+      executeUltimate(e,p,action.skill,'enemy');
+    } else if(action.type==='skill'){
+      if(e.addUltPoint()) updateUltPoints();
+      executeSkill(e,p,action.skill,'enemy');
+    } else if(action.type==='attack'){
+      e.isDefending=false;
+      SFX.attack();
+      animFighter('enemy','attacking',350);
+      setTimeout(()=>{
+        const {dmg,crit}=calcDamage(e,p,0);
+        const actual=p.takeDamage(dmg);
+        game.stats.dmgTaken+=actual;
+        animFighter('player','hurt',400);
+        if(crit){ SFX.crit(); showDmg('player',`暴击 -${actual}`,'crit'); addLog(`💥 暴击！${e.name}普攻造成${actual}伤害`,'crit'); }
+        else{ SFX.hit(); showDmg('player',`-${actual}`,'dmg'); addLog(`⚔️ ${e.name}普攻造成${actual}伤害`,'enemy'); }
+        if(Math.random()<0.3 && e.addUltPoint()) updateUltPoints();
+        updateFighterDisplay();
+        if(checkKO()) return;
+        endEnemyTurn();
+      },delay(300));
+    } else if(action.type==='defend'){
+      e.isDefending=true;
+      SFX.defend();
+      addLog(`🛡️ ${e.name}进入防御姿态`,'enemy');
+      updateFighterDisplay();
+      endEnemyTurn();
+    }
+  }, delay(500));
+}
+
+function decideAI(e,p){
+  const hpPct=e.hp/e.maxHp, pPct=p.hp/p.maxHp;
+  // 奥义优先
+  if(e.ultReady){
+    const ult=e.skills.find(s=>s.ult);
+    if(ult) return {type:'ult',skill:ult};
+  }
+  // 低血量治疗
+  const healSk=e.skills.find(s=>s.heal&&!s.ult);
+  if(healSk&&hpPct<0.4&&Math.random()<0.7) return {type:'skill',skill:healSk};
+  // 低血量防御
+  if(hpPct<0.2&&Math.random()<0.35) return {type:'defend'};
+  // 玩家残血优先高伤害
+  if(pPct<0.3){
+    const dmgSkills=e.skills.filter(s=>!s.ult&&s.damage).sort((a,b)=>b.damage-a.damage);
+    if(dmgSkills.length>0&&Math.random()<0.7) return {type:'skill',skill:dmgSkills[0]};
+  }
+  // 常规：60%技能
+  const dmgSkills=e.skills.filter(s=>!s.ult&&s.damage);
+  if(dmgSkills.length>0&&Math.random()<0.6){
+    return {type:'skill',skill:dmgSkills[Math.floor(Math.random()*dmgSkills.length)]};
+  }
+  // 有治疗技能且血量中等时偶尔使用
+  if(healSk&&hpPct<0.7&&Math.random()<0.2) return {type:'skill',skill:healSk};
+  return {type:'attack'};
+}
+
+// ===== 阵亡/切换/胜负 =====
+function checkKO(){
+  if(!game.player.isAlive()){
+    game.stats.kos++;
+    addLog(`💀 ${game.player.name} 阵亡！`,'system');
+    animFighter('player','dead',999999);
+    // 切换下一个
+    game.pIdx++;
+    if(game.pIdx >= game.playerTeam.length){
+      // 全灭
+      game.ended=true;
+      SFX.defeat();
+      setTimeout(()=>showResult(false), delay(1200));
+      return true;
+    }
+    // 切换
+    setTimeout(()=>{
+      game.player = game.playerTeam[game.pIdx];
+      document.getElementById('playerFighter').classList.add('switch-in');
+      setTimeout(()=>document.getElementById('playerFighter').classList.remove('switch-in'),500);
+      SFX.switch();
+      addLog(`🔄 ${game.player.name} 登场！`,'system');
+      showTurnBanner(game.player.name,'#4fc3f7');
+      updateFighterDisplay();
+      renderTeamBars();
+      renderSkillBar();
+      updateUltPoints();
+      // 新忍者登场后是玩家回合
+      game.isPlayerTurn=true;
+      game.busy=false;
+      renderSkillBar();
+    }, delay(800));
+    return true;
+  }
+  if(!game.enemy.isAlive()){
+    game.stats.kos++;
+    addLog(`💀 ${game.enemy.name} 阵亡！`,'system');
+    animFighter('enemy','dead',999999);
+    game.eIdx++;
+    if(game.eIdx >= game.enemyTeam.length){
+      game.ended=true;
+      SFX.victory();
+      setTimeout(()=>showResult(true), delay(1200));
+      return true;
+    }
+    setTimeout(()=>{
+      game.enemy = game.enemyTeam[game.eIdx];
+      document.getElementById('enemyFighter').classList.add('switch-in');
+      setTimeout(()=>document.getElementById('enemyFighter').classList.remove('switch-in'),500);
+      SFX.switch();
+      addLog(`🔄 ${game.enemy.name} 登场！`,'system');
+      showTurnBanner(game.enemy.name,'#ef5350');
+      updateFighterDisplay();
+      renderTeamBars();
+      // 敌人登场后是敌人回合
+      game.isPlayerTurn=false;
+      game.busy=false;
+      renderSkillBar();
+      setTimeout(()=>enemyTurn(), delay(1000));
+    }, delay(800));
+    return true;
+  }
+  return false;
+}
+
+// ===== 结算 =====
+function showResult(win){
+  const icon=document.getElementById('resultIcon');
+  const title=document.getElementById('resultTitle');
+  const detail=document.getElementById('resultDetail');
+  const stats=document.getElementById('resultStats');
+
+  if(win){
+    icon.textContent='🏆'; title.textContent='胜 利'; title.className='result-title win';
+    let detailText = `你的小队成功击败了对手！<br>存活忍者：${game.playerTeam.filter(n=>n.isAlive()).length}/${game.teamSize}`;
+    if(game.mode==='story'){
+      const stage = STORY_STAGES[game.storyStageIdx];
+      if(!game.storyProgress.includes(stage.id)){
+        game.storyProgress.push(stage.id);
+        localStorage.setItem('naruto_story_progress', JSON.stringify(game.storyProgress));
+      }
+      const isLast = game.storyStageIdx >= STORY_STAGES.length-1;
+      detailText = `📜 剧情关卡【${stage.name}】通关！<br>🎁 奖励：${stage.reward}`;
+      if(isLast) detailText += `<br><br>🌟 恭喜通关全部剧情！你已成为真正的火影！`;
+    }
+    detail.innerHTML = detailText;
+  } else {
+    icon.textContent='💀'; title.textContent='战 败'; title.className='result-title lose';
+    let detailText = `你的小队全部阵亡...<br>击败敌人数：${game.stats.kos}`;
+    if(game.mode==='story'){
+      const stage = STORY_STAGES[game.storyStageIdx];
+      detailText = `📜 剧情关卡【${stage.name}】挑战失败...<br>击败敌人数：${game.stats.kos}<br>再接再厉！`;
+    }
+    detail.innerHTML = detailText;
+  }
+
+  stats.innerHTML=`
+    <div>📊 战斗统计</div>
+    <div>⚔️ 造成伤害：${game.stats.dmgDealt}</div>
+    <div>💔 受到伤害：${game.stats.dmgTaken}</div>
+    <div>🔄 总回合数：${game.stats.turns}</div>
+    <div>💥 暴击次数：${game.stats.crits}</div>
+    <div>☠️ 击败忍者：${game.stats.kos}</div>
+  `;
+
+  // 动态按钮
+  const btns = document.getElementById('resultBtns');
+  if(game.mode==='story' && win){
+    const hasNext = game.storyStageIdx < STORY_STAGES.length-1;
+    if(hasNext){
+      btns.innerHTML = `
+        <button class="result-btn gold" onclick="nextStoryStage()">➡️ 下一关</button>
+        <button class="result-btn red" onclick="showStoryMode()">📜 关卡选择</button>
+        <button class="result-btn gray" onclick="showMainMenu()">🏠 主菜单</button>
+      `;
+    } else {
+      btns.innerHTML = `
+        <button class="result-btn gold" onclick="showStoryMode()">📜 剧情模式</button>
+        <button class="result-btn red" onclick="showModeSelect()">📋 更换模式</button>
+        <button class="result-btn gray" onclick="showMainMenu()">🏠 主菜单</button>
+      `;
+    }
+  } else if(game.mode==='story' && !win){
+    btns.innerHTML = `
+      <button class="result-btn gold" onclick="rematch()">🔄 重新挑战</button>
+      <button class="result-btn red" onclick="showStoryMode()">📜 关卡选择</button>
+      <button class="result-btn gray" onclick="showMainMenu()">🏠 主菜单</button>
+    `;
+  } else {
+    btns.innerHTML = `
+      <button class="result-btn gold" onclick="rematch()">🔄 再来一局</button>
+      <button class="result-btn red" onclick="showModeSelect()">📋 更换模式</button>
+      <button class="result-btn gray" onclick="showMainMenu()">🏠 主菜单</button>
+    `;
+  }
+
+  showScreen('resultScreen');
+}
+
+function nextStoryStage(){
+  SFX.click();
+  game.storyStageIdx++;
+  const stage = STORY_STAGES[game.storyStageIdx];
+  game.storyEnemyIds = [...stage.enemy];
+  game.storyScene = stage.scene;
+  // 用当前队伍直接开始下一关
+  game.pickedIds = game.playerTeam.map(f=>f.id);
+  initBattle();
+}
+
+function rematch(){
+  SFX.click();
+  showCharSelect();
+}
+
+function quitBattle(){
+  if(confirm('确定退出当前决斗？')){
+    SFX.click();
+    game.ended=true;
+    showModeSelect();
+  }
+}
+
+// ===== 图鉴 =====
+function showCharIntro(){
+  SFX.click();
+  const g=document.getElementById('introGrid');
+  g.innerHTML='';
+  NINJA_IDS.forEach(id=>{
+    const n=NINJAS[id];
+    const c=document.createElement('div');
+    c.className='intro-card';
+    c.innerHTML=`<div class="avatar">${n.avatar}</div><div class="name">${n.name}</div>`;
+    c.onclick=()=>showIntroDetail(id);
+    g.appendChild(c);
+  });
+  document.getElementById('introDetail').style.display='none';
+  showScreen('charIntro');
+}
+
+function showIntroDetail(id){
+  SFX.select();
+  const n=NINJAS[id];
+  const d=document.getElementById('introDetail');
+  d.innerHTML=`
+    <div class="header">
+      <div class="big-avatar">${n.avatar}</div>
+      <div><div class="name">${n.name}</div><div class="title">${n.title}</div></div>
+    </div>
+    <div class="stats-row">
+      <div class="stat">❤️ 生命 ${n.stats.hp}</div>
+      <div class="stat">⚔️ 攻击 ${n.stats.atk}</div>
+      <div class="stat">🛡️ 防御 ${n.stats.def}</div>
+      <div class="stat">💨 速度 ${n.stats.spd}</div>
+      <div class="stat">💥 暴击 ${n.stats.crit}%</div>
+    </div>
+    <div style="margin-bottom:10px;font-weight:bold;color:#ffd700">技能列表（小技能命中获得1点奥义点，满4点可释放奥义）</div>
+    ${n.skills.map(sk=>`
+      <div class="skill-item${sk.ult?' ult':''}">
+        <div class="skill-name">${sk.icon} ${sk.name}${sk.ult?' <span style="color:#ffd700;font-size:.8em">【奥义·消耗4点】</span>':''}</div>
+        <div class="skill-desc">${sk.desc}${sk.damage?` | 伤害:${sk.damage}`:''}${sk.heal?` | 恢复:${sk.heal}`:''}</div>
+      </div>
+    `).join('')}
+  `;
+  d.style.display='block';
+}
+
+// ===== 键盘 =====
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('battleScreen').classList.contains('active')) return;
+  if(!game.isPlayerTurn||game.busy||game.ended) return;
+  if(e.key==='1') doBasicAttack();
+  if(e.key==='2'&&game.player.skills[0]&&!game.player.skills[0].ult) useSkill(0);
+  if(e.key==='3'&&game.player.skills[1]&&!game.player.skills[1].ult) useSkill(1);
+  if(e.key==='4'&&game.player.skills[2]&&!game.player.skills[2].ult) useSkill(2);
+  if(e.key===' '&&game.player.ultReady){ e.preventDefault(); const ui=game.player.skills.findIndex(s=>s.ult); if(ui>=0) useSkill(ui); }
+});
+
+// 初始化音频
+initAudio();
+document.addEventListener('click',()=>{ if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume(); },{once:true});
+</script>
+</body>
+</html>
